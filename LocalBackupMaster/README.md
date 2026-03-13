@@ -1,49 +1,65 @@
-# Local Backup Master
+# 🛡️ Local Backup Master
 
-Aplicación de escritorio multiplataforma (Windows/macOS) desarrollada en .NET MAUI para realizar copias de seguridad de carpetas locales hacia unidades externas USB/HDD/SSD.
+**Local Backup Master** es una aplicación de escritorio multiplataforma (Windows/macOS) diseñada para realizar copias de seguridad locales incrementales hacia unidades externas (USB/HDD/SSD).  
 
-## 🚀 Requisitos Previos
+Sigue la filosofía **"Local First"**: Privacidad total, sin dependencia de la nube, velocidad extrema mediante procesamiento paralelo y deduplicación inteligente por Hash.
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) instalado.
-- Visual Studio 2022 (con soporte para desarrollo MAUI) o Visual Studio Code con las extensiones de MAUI y C# Dev Kit instaladas.
-- Windows 10 (1809 o superior) o Windows 11.
+---
 
-## 🛠️ Instrucciones de Compilación y Ejecución (Windows)
+## ✨ Características Principales
 
-Para compilar y ejecutar el proyecto desde la línea de comandos en Windows, puedes seguir estos pasos:
+- **🔄 Backup Incremental Inteligente**: Compara archivos por metadatos (fecha/tamaño) y realiza validación profunda mediante **XXHash64** (el algoritmo de hashing no criptográfico más rápido del mundo).
+- **⚡ Procesamiento Paralelo**: Utiliza el patrón **Producer-Consumer** con canales asíncronos para maximizar la velocidad de transferencia, permitiendo configurar el número de hilos.
+- **🏗️ Arquitectura Profesional**: Implementada bajo el patrón **MVVM** puro, con desacoplamiento total mediante interfaces y servicios especializados.
+- **📼 Historial y Catálogo**: Registro detallado en base de datos local **SQLite** para evitar copias redundantes.
+- **🔌 Detección Automática**: Monitoriza la conexión de dispositivos extraíbles para sugerir destinos de backup al instante.
+- **🎨 UI Moderna**: Interfaz adaptativa (Dark/Light mode) con animaciones fluidas y feedback visual de progreso en tiempo real.
 
-### 1. Restaurar las dependencias del proyecto
-Asegúrate de estar en la carpeta donde reside el archivo `.csproj` (`/LocalBackupMaster`).
+---
+
+## 🛠️ Stack Tecnológico
+
+- **Framework**: .NET MAUI (.NET 9)
+- **Lenguaje**: C# 12
+- **Persistencia**: Entity Framework Core con SQLite
+- **Patrones**: MVVM, Strategy, Orchestrator, Repository, Dependency Injection
+- **Toolkit**: CommunityToolkit.Mvvm & CommunityToolkit.Maui
+
+---
+
+## 🚀 Requisitos e Instalación
+
+### Requisitos Previos
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- Windows 10 (1809+) o Windows 11 / macOS Monterey+
+
+### Compilación y Ejecución (Windows)
+Desde la terminal en el directorio `/LocalBackupMaster`:
+
 ```bash
+# Restaurar dependencias
 dotnet restore
-```
 
-### 2. Compilar y Ejecutar en Windows
-
-En .NET MAUI para Windows es necesario especificar el framework objetivo (Target Framework) al ejecutar el comando. El framework para Windows es `net9.0-windows10.0.19041.0`.
-
-Ejecuta el siguiente comando para compilar e iniciar la aplicación inmediatamente:
-```bash
-dotnet build -t:Run -f net9.0-windows10.0.19041.0
-```
-
-También puedes usar simplemente `dotnet run` especificando el framework de Windows de esta forma:
-```bash
+# Compilar y ejecutar
 dotnet run -f net9.0-windows10.0.19041.0
 ```
 
-> **Nota:** El comando clásico `dotnet start` no existe, se utiliza `dotnet run` junto con el parámetro `-f` para decirle a MAUI bajo qué sistema operativo quieres arrancar la aplicación.
+---
 
-### 🐛 Entornos de Desarrollo
-- Si usas **Visual Studio 2022**, puedes seleccionar "Windows Machine" en el menú desplegable del botón de "Depurar (Debug)" y simplemente pulsar el botón de Play (F5).
-- Si usas **VS Code**, en el depurador elige "C#: LocalBackupMaster" y selecciona el entorno "Windows".
+## 📚 Estructura de la Solución
 
-## 📚 Estructura Principal del Proyecto
+El proyecto ha sido refactorizado recientemente para seguir las mejores prácticas de ingeniería de software:
 
-- `MainPage.xaml`: Vista principal con los controles de selección de origen, destino y visor de progreso.
-- `Services/AppDbContext.cs`: Configuración de la base de datos local SQLite (`Microsoft.EntityFrameworkCore.Sqlite`).
-- `Services/DatabaseService.cs`: Lógica para realizar consultas e inserciones locales de forma asincrónica.
-- `Models/`: Contiene `BackupSource`, `BackupDestination` y `FileRecord` listos para ser usados.
+- **`/ViewModels`**: Contiene la lógica de estado y comandos de la interfaz (`MainViewModel`).
+- **`/Services/BackupEngine`**: Orquestador de copias paralelas (`IBackupEngine`).
+- **`/Services/Strategies`**: Algoritmos de decisión de backup (`IBackupStrategy`).
+- **`/Services/Navigation & Validation`**: Servicios desacoplados de infraestructura.
+- **`/Models`**: Entidades de datos y reportes de progreso.
 
 ---
-*Este proyecto sigue la filosofía "Local First". Privacidad total, sin dependencia de la nube, velocidad extrema.*
+
+## 📝 Notas de Versión
+**v1.01**: Refactorización completa a MVVM y patrones de diseño industriales.
+
+---
+*Privacidad total. Velocidad extrema. Control absoluto sobre tus datos.*
