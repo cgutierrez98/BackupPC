@@ -1,2 +1,31 @@
-/agent.md
-/task.md
+[Aa]gent.md
+[Tt]ask.md
+
+# .NET Core
+**/[Bb]in/
+**/[Oo]bj/
+**/[Pp]ublish/
+
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# MAUI / Mobile specific
+**/Platforms/Android/obj/
+**/Platforms/iOS/obj/
+**/Platforms/MacCatalyst/obj/
+**/Platforms/Tizen/obj/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# OS generated files
+.DS_Store
+Thumbs.db
