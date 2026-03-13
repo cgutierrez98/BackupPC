@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LocalBackupMaster.ReportPage"
+             Title="Reporte de Backup"
+             BackgroundColor="{AppThemeBinding Light=#F0F2F5, Dark=#0A0A0A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="20"
+                             MaximumWidthRequest="680" HorizontalOptions="Center">
+
+            <!-- ══ Hero result banner ══ -->
+            <Border x:Name="HeroBanner" Opacity="0" TranslationY="20"
+                    Padding="28,24" StrokeThickness="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="20"/></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,6" Radius="20" Opacity="0.12"/></Border.Shadow>
+
+                <Grid ColumnDefinitions="Auto, *" ColumnSpacing="18" RowDefinitions="Auto,Auto,Auto">
+                    <Label Grid.Column="0" Grid.RowSpan="3"
+                           x:Name="ResultEmojiLabel" Text="✅"
+                           FontSize="52" VerticalOptions="Center"/>
+
+                    <Label Grid.Column="1" Grid.Row="0"
+                           x:Name="ResultTitleLabel" Text="Completado exitosamente"
+                           FontFamily="OpenSansSemibold" FontSize="22"
+                           TextColor="White"/>
+
+                    <Label Grid.Column="1" Grid.Row="1"
+                           x:Name="DurationLabel" Text="Duración: —"
+                           FontSize="14" TextColor="#CCDDFF"/>
+
+                    <Label Grid.Column="1" Grid.Row="2"
+                           x:Name="DateLabel" Text="—"
+                           FontSize="12" TextColor="#AABBEE"/>
+                </Grid>
+            </Border>
+
+            <!-- ══ Stats chips ══ -->
+            <Grid x:Name="StatsGrid" Opacity="0" TranslationY="20"
+                  ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+
+                <!-- Analizados -->
+                <Border Grid.Column="0" Padding="12,10"
+                        StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                    <Border.Shadow><Shadow Brush="Black" Offset="0,3" Radius="10" Opacity="0.07"/></Border.Shadow>
+                    <VerticalStackLayout Spacing="3" HorizontalOptions="Center">
+                        <Label Text="📂" FontSize="20" HorizontalTextAlignment="Center"/>
+                        <Label x:Name="ChipScanned" Text="0"
+                               FontFamily="OpenSansSemibold" FontSize="22"
+                               TextColor="{AppThemeBinding Light=#0078D4, Dark=#4DA6FF}"
+                               HorizontalTextAlignment="Center"/>
+                        <Label Text="ANALIZADOS" FontSize="9" TextColor="Gray"
+                               FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Copiados -->
+                <Border Grid.Column="1" Padding="12,10"
+                        StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                    <Border.Shadow><Shadow Brush="Black" Offset="0,3" Radius="10" Opacity="0.07"/></Border.Shadow>
+                    <VerticalStackLayout Spacing="3" HorizontalOptions="Center">
+                        <Label Text="📦" FontSize="20" HorizontalTextAlignment="Center"/>
+                        <Label x:Name="ChipCopied" Text="0"
+                               FontFamily="OpenSansSemibold" FontSize="22"
+                               TextColor="#2DA44E" HorizontalTextAlignment="Center"/>
+                        <Label Text="COPIADOS" FontSize="9" TextColor="Gray"
+                               FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Tamaño -->
+                <Border Grid.Column="2" Padding="12,10"
+                        StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                    <Border.Shadow><Shadow Brush="Black" Offset="0,3" Radius="10" Opacity="0.07"/></Border.Shadow>
+                    <VerticalStackLayout Spacing="3" HorizontalOptions="Center">
+                        <Label Text="💾" FontSize="20" HorizontalTextAlignment="Center"/>
+                        <Label x:Name="ChipSize" Text="0 B"
+                               FontFamily="OpenSansSemibold" FontSize="18"
+                               TextColor="#9B59B6" HorizontalTextAlignment="Center"/>
+                        <Label Text="COPIADO" FontSize="9" TextColor="Gray"
+                               FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Omitidos -->
+                <Border Grid.Column="3" Padding="12,10"
+                        StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="14"/></Border.StrokeShape>
+                    <Border.Shadow><Shadow Brush="Black" Offset="0,3" Radius="10" Opacity="0.07"/></Border.Shadow>
+                    <VerticalStackLayout Spacing="3" HorizontalOptions="Center">
+                        <Label Text="⚠️" FontSize="20" HorizontalTextAlignment="Center"/>
+                        <Label x:Name="ChipFailed" Text="0"
+                               FontFamily="OpenSansSemibold" FontSize="22"
+                               TextColor="#E81123" HorizontalTextAlignment="Center"/>
+                        <Label Text="OMITIDOS" FontSize="9" TextColor="Gray"
+                               FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- ══ Archivos con error ══ -->
+            <Border x:Name="FailedCard" IsVisible="False" Opacity="0" TranslationY="20"
+                    StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
+                    Padding="22">
+                <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="14" Opacity="0.07"/></Border.Shadow>
+
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="⚠️  Archivos omitidos (bloqueados o error)" FontFamily="OpenSansSemibold"
+                           FontSize="16" TextColor="{AppThemeBinding Light=#AAA, Dark=#EEE}"/>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EBEBEB, Dark=#2E2E2E}"/>
+                    <CollectionView x:Name="FailedList" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Padding="0,4">
+                                    <Label Grid.Column="0" Text="●" TextColor="#E81123"
+                                           FontSize="10" VerticalOptions="Center"/>
+                                    <Label Grid.Column="1" Text="{Binding .}"
+                                           FontSize="12" TextColor="Gray"
+                                           LineBreakMode="TailTruncation"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ══ Archivos copiados ══ -->
+            <Border x:Name="CopiedCard" IsVisible="False" Opacity="0" TranslationY="20"
+                    StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
+                    Padding="22">
+                <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="14" Opacity="0.07"/></Border.Shadow>
+
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="📦  Archivos copiados / actualizados" FontFamily="OpenSansSemibold"
+                               FontSize="16" TextColor="{AppThemeBinding Light=#333, Dark=#EEE}"/>
+                        <Label Grid.Column="1" x:Name="CopiedCountLabel"
+                               Text="" FontSize="12" TextColor="Gray"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EBEBEB, Dark=#2E2E2E}"/>
+                    <CollectionView x:Name="CopiedList" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Padding="0,4">
+                                    <Label Grid.Column="0" Text="✓" TextColor="#2DA44E"
+                                           FontSize="11" FontFamily="OpenSansSemibold"
+                                           VerticalOptions="Center"/>
+                                    <Label Grid.Column="1" Text="{Binding .}"
+                                           FontSize="12" TextColor="Gray"
+                                           LineBreakMode="TailTruncation"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ══ Botón volver ══ -->
+            <Button x:Name="BackBtn" Text="← Volver al inicio"
+                    Clicked="OnBackClicked"
+                    CornerRadius="10" BackgroundColor="#0078D4" TextColor="White"
+                    FontFamily="OpenSansSemibold" HeightRequest="50"
+                    Margin="0,5,0,20" Opacity="0"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
