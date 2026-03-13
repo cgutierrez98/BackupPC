@@ -1,7 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LocalBackupMaster.ViewModels"
+             xmlns:m="clr-namespace:LocalBackupMaster.Models"
              x:Class="LocalBackupMaster.MainPage"
+             x:DataType="vm:MainViewModel"
              Title="Local Backup Master"
              BackgroundColor="{AppThemeBinding Light=#F0F2F5, Dark=#0A0A0A}">
 
@@ -45,15 +48,16 @@
                     <CollectionView x:Name="SourcesCollectionView" ItemsSource="{Binding SourceItems}"
                                     SelectionMode="None" EmptyView="Sin carpetas de origen.">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="m:BackupSource">
                                 <Grid ColumnDefinitions="*, Auto" Padding="0,6">
                                     <Label Grid.Column="0" Text="{Binding Path}" FontSize="13"
                                            TextColor="{AppThemeBinding Light=#444, Dark=#BBB}"
                                            LineBreakMode="TailTruncation" VerticalOptions="Center"/>
-                                    <Button Grid.Column="1" Text="✕" FontSize="11" WidthRequest="32" HeightRequest="32"
-                                            CornerRadius="6" BackgroundColor="Transparent"
-                                            TextColor="Gray" CommandParameter="{Binding .}"
-                                            Clicked="OnRemoveSourceClicked"/>
+                                     <Button Grid.Column="1" Text="✕" FontSize="11" WidthRequest="32" HeightRequest="32"
+                                             CornerRadius="6" BackgroundColor="Transparent"
+                                             TextColor="Gray" 
+                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveSourceCommand}"
+                                             CommandParameter="{Binding .}"/>
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -82,7 +86,7 @@
                     <CollectionView x:Name="DestsCollectionView" ItemsSource="{Binding DestinationItems}"
                                     SelectionMode="None" EmptyView="Sin destinos registrados.">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="m:BackupDestination">
                                 <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10" Padding="0,6">
                                     <Label Grid.Column="0" Text="💽" FontSize="18" VerticalOptions="Center"/>
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
@@ -92,10 +96,11 @@
                                         <Label Text="{Binding Uuid}" FontSize="10" TextColor="Gray"
                                                LineBreakMode="TailTruncation"/>
                                     </VerticalStackLayout>
-                                    <Button Grid.Column="2" Text="✕" FontSize="11" WidthRequest="32" HeightRequest="32"
-                                            CornerRadius="6" BackgroundColor="Transparent"
-                                            TextColor="Gray" CommandParameter="{Binding .}"
-                                            Clicked="OnRemoveDestinationClicked"/>
+                                     <Button Grid.Column="2" Text="✕" FontSize="11" WidthRequest="32" HeightRequest="32"
+                                             CornerRadius="6" BackgroundColor="Transparent"
+                                             TextColor="Gray" 
+                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveDestinationCommand}"
+                                             CommandParameter="{Binding .}"/>
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -119,14 +124,13 @@
                     <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" RowSpacing="4" ColumnSpacing="10">
                         <Label Grid.Column="0" Grid.Row="0" Text="Hilos paralelos de copia" FontSize="14"
                                TextColor="{AppThemeBinding Light=#444, Dark=#CCC}" VerticalOptions="Center"/>
-                        <Label Grid.Column="1" Grid.Row="0" x:Name="ParallelismLabel" Text="4"
+                        <Label Grid.Column="1" Grid.Row="0" x:Name="ParallelismLabel" Text="{Binding ParallelDegree}"
                                FontFamily="OpenSansSemibold" FontSize="18"
                                TextColor="{AppThemeBinding Light=#0078D4, Dark=#4DA6FF}"
                                VerticalOptions="Center"/>
                         <Slider Grid.Column="0" Grid.Row="1" x:Name="ParallelismSlider"
-                                Minimum="1" Maximum="8" Value="4"
-                                MinimumTrackColor="#0078D4" MaximumTrackColor="LightGray"
-                                ValueChanged="OnParallelismChanged"/>
+                                Minimum="1" Maximum="8" Value="{Binding ParallelDegree}"
+                                MinimumTrackColor="#0078D4" MaximumTrackColor="LightGray" />
                         <Label Grid.Column="1" Grid.Row="1" Text="hilos" FontSize="11"
                                TextColor="Gray" VerticalOptions="Center"/>
                     </Grid>
@@ -134,12 +138,14 @@
                     <!-- Botones -->
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12" Margin="0,8,0,0">
                         <Button Text="🚀  Iniciar Backup" x:Name="StartBackupBtn"
+                                Command="{Binding StartBackupCommand}"
                                 Clicked="OnStartBackupClicked"
                                 CornerRadius="10" BackgroundColor="#0078D4" TextColor="White"
                                 FontFamily="OpenSansSemibold" HeightRequest="52" Grid.Column="0"/>
 
                         <Button Text="Cancelar" x:Name="CancelBackupBtn"
-                                Clicked="OnCancelBackupClicked" IsVisible="False"
+                                Command="{Binding CancelBackupCommand}"
+                                Clicked="OnCancelBackupClicked" IsVisible="{Binding CanCancel}"
                                 CornerRadius="10" BackgroundColor="#E81123" TextColor="White"
                                 FontFamily="OpenSansSemibold" HeightRequest="52"
                                 Grid.Column="1" WidthRequest="110"/>
@@ -148,7 +154,7 @@
             </Border>
 
             <!-- ══════ Progreso Card ══════ -->
-            <Border x:Name="ProgressCard" IsVisible="False" Opacity="0" Scale="0.95"
+            <Border x:Name="ProgressCard" IsVisible="{Binding IsBusy}" Opacity="0" Scale="0.95"
                     StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
                     Padding="22" Margin="0,5,0,15">
                 <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
@@ -159,17 +165,17 @@
                            TextColor="{AppThemeBinding Light=#222, Dark=#EEE}"/>
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="14">
-                        <ProgressBar x:Name="GlobalProgressBar" Progress="0.0"
+                        <ProgressBar x:Name="GlobalProgressBar" Progress="{Binding GlobalProgress}"
                                      ProgressColor="#0078D4" HeightRequest="10"
                                      VerticalOptions="Center" Grid.Column="0"/>
-                        <Label x:Name="PercentageLabel" Text="0%"
+                        <Label x:Name="PercentageLabel" Text="{Binding PercentageText}"
                                FontFamily="OpenSansSemibold" FontSize="26"
                                TextColor="{AppThemeBinding Light=#0078D4, Dark=#4DA6FF}"
                                Grid.Column="1" VerticalOptions="Center"
                                WidthRequest="68" HorizontalTextAlignment="End"/>
                     </Grid>
 
-                    <Label x:Name="CurrentFileLabel" Text="Preparando motores..."
+                    <Label x:Name="CurrentFileLabel" Text="{Binding CurrentFileStatus}"
                            FontSize="13" TextColor="Gray" HorizontalOptions="Center"/>
 
                     <!-- Estadísticas rápidas -->
@@ -179,7 +185,7 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
                             <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
                                 <Label Text="ANALIZADOS" FontSize="9" TextColor="Gray" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
-                                <Label x:Name="StatsScannedLabel" Text="0" FontSize="18"
+                                <Label x:Name="StatsScannedLabel" Text="{Binding StatsScanned}" FontSize="18"
                                        FontFamily="OpenSansSemibold"
                                        TextColor="{AppThemeBinding Light=#0078D4, Dark=#4DA6FF}"
                                        HorizontalTextAlignment="Center"/>
@@ -190,7 +196,7 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
                             <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
                                 <Label Text="COPIADOS" FontSize="9" TextColor="Gray" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
-                                <Label x:Name="StatsCopiedLabel" Text="0" FontSize="18"
+                                <Label x:Name="StatsCopiedLabel" Text="{Binding StatsCopied}" FontSize="18"
                                        FontFamily="OpenSansSemibold" TextColor="#2DA44E"
                                        HorizontalTextAlignment="Center"/>
                             </VerticalStackLayout>
@@ -200,7 +206,7 @@
                             <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
                             <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
                                 <Label Text="OMITIDOS" FontSize="9" TextColor="Gray" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
-                                <Label x:Name="StatsFailedLabel" Text="0" FontSize="18"
+                                <Label x:Name="StatsFailedLabel" Text="{Binding StatsFailed}" FontSize="18"
                                        FontFamily="OpenSansSemibold" TextColor="#E81123"
                                        HorizontalTextAlignment="Center"/>
                             </VerticalStackLayout>

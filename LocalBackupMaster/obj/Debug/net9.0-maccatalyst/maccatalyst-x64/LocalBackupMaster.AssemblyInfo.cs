@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LocalBackupMaster")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+37460e1749f6531f544a640f71eb5adc3efea1cf")]
 [assembly: System.Reflection.AssemblyProductAttribute("LocalBackupMaster")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LocalBackupMaster")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

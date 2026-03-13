@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "UEL6N286BFE=",
+  "dgSpecHash": "jJ3RAdvvSuw=",
   "success": true,
   "projectFilePath": "C:\\Users\\carlo\\source\\repos\\BackupPC\\LocalBackupMaster\\LocalBackupMaster.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\carlo\\.nuget\\packages\\communitytoolkit.maui\\11.1.0\\communitytoolkit.maui.11.1.0.nupkg.sha512",
     "C:\\Users\\carlo\\.nuget\\packages\\communitytoolkit.maui.core\\11.1.0\\communitytoolkit.maui.core.11.1.0.nupkg.sha512",
+    "C:\\Users\\carlo\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.0\\communitytoolkit.mvvm.8.4.0.nupkg.sha512",
     "C:\\Users\\carlo\\.nuget\\packages\\microsoft.data.sqlite.core\\9.0.2\\microsoft.data.sqlite.core.9.0.2.nupkg.sha512",
     "C:\\Users\\carlo\\.nuget\\packages\\microsoft.entityframeworkcore\\9.0.2\\microsoft.entityframeworkcore.9.0.2.nupkg.sha512",
     "C:\\Users\\carlo\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\9.0.2\\microsoft.entityframeworkcore.abstractions.9.0.2.nupkg.sha512",

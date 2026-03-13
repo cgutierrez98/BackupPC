@@ -529,3 +529,5 @@ C:\Users\carlo\source\repos\BackupPC\LocalBackupMaster\bin\Debug\net9.0-windows1
 C:\Users\carlo\source\repos\BackupPC\LocalBackupMaster\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\CommunityToolkit.Maui.Core.dll
 C:\Users\carlo\source\repos\BackupPC\LocalBackupMaster\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\System.Speech.dll
 C:\Users\carlo\source\repos\BackupPC\LocalBackupMaster\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\System.IO.Hashing.dll
+C:\Users\carlo\source\repos\BackupPC\LocalBackupMaster\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\CommunityToolkit.Mvvm.dll
+C:\Users\carlo\source\repos\BackupPC\LocalBackupMaster\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\LocalBackupMaster.sourcelink.json

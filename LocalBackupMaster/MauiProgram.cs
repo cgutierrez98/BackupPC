@@ -1,6 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using LocalBackupMaster.Services;
+using LocalBackupMaster.ViewModels;
+using LocalBackupMaster.Services.Strategies;
+using LocalBackupMaster.Services.BackupEngine;
+using LocalBackupMaster.Services.Navigation;
+using LocalBackupMaster.Services.Validation;
 using CommunityToolkit.Maui;
 
 namespace LocalBackupMaster;
@@ -28,6 +33,17 @@ public static class MauiProgram
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddSingleton<DeviceWatcherService>();
         builder.Services.AddTransient<BackupScannerService>();
+
+        // Register Backup Engine and Strategy
+        builder.Services.AddTransient<IBackupStrategy, IncrementalHashStrategy>();
+        builder.Services.AddTransient<IBackupEngine, ParallelBackupEngine>();
+
+        // Phase 3 Support Services
+        builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
+        builder.Services.AddSingleton<IBackupValidator, BackupValidator>();
+
+        // Register ViewModels
+        builder.Services.AddSingleton<MainViewModel>();
 
         // Register Pages
         builder.Services.AddTransient<MainPage>();
