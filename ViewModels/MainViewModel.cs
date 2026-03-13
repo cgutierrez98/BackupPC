@@ -12,6 +12,8 @@ using CommunityToolkit.Maui.Storage;
 
 namespace LocalBackupMaster.ViewModels;
 
+public record LogEntry(string Message, string Timestamp, Color Color);
+
 public partial class MainViewModel : ObservableObject
 {
     private readonly DatabaseService _databaseService;
@@ -21,11 +23,30 @@ public partial class MainViewModel : ObservableObject
     private readonly INavigationService _navigationService;
     private readonly IBackupValidator _backupValidator;
 
+    private readonly Dictionary<string, string> _filterGroups = new()
+    {
+        { "photos", ".jpg, .jpeg, .png, .heic, .raw" },
+        { "docs", ".pdf, .docx, .xlsx, .pptx, .txt" },
+        { "video", ".mp4, .mov, .mkv, .avi" },
+        { "audio", ".mp3, .wav, .flac, .aac" }
+    };
+
     public ObservableCollection<BackupSource> SourceItems { get; } = [];
     public ObservableCollection<BackupDestination> DestinationItems { get; } = [];
+    public ObservableCollection<LogEntry> LogItems { get; } = [];
 
     [ObservableProperty]
     private int _parallelDegree = 4;
+
+    [ObservableProperty]
+    private string _includeExtensions = "";
+
+    // Propiedades para estado visual de los botones
+    [ObservableProperty] private bool _isPhotosActive;
+    [ObservableProperty] private bool _isDocsActive;
+    [ObservableProperty] private bool _isVideoActive;
+    [ObservableProperty] private bool _isAudioActive;
+    [ObservableProperty] private bool _isAllActive = true;
 
     [ObservableProperty]
     private string _currentFileStatus = "Listo para comenzar";
@@ -145,6 +166,60 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ToggleFilter(string category)
+    {
+        category = category.ToLower();
+
+        if (category == "all")
+        {
+            ResetFilters();
+            return;
+        }
+
+        // Toggle el estado
+        switch (category)
+        {
+            case "photos": IsPhotosActive = !IsPhotosActive; break;
+            case "docs": IsDocsActive = !IsDocsActive; break;
+            case "video": IsVideoActive = !IsVideoActive; break;
+            case "audio": IsAudioActive = !IsAudioActive; break;
+        }
+
+        UpdateIncludeExtensionsFromActiveFilters();
+    }
+
+    private void ResetFilters()
+    {
+        IsPhotosActive = false;
+        IsDocsActive = false;
+        IsVideoActive = false;
+        IsAudioActive = false;
+        IsAllActive = true;
+        IncludeExtensions = "";
+    }
+
+    private void UpdateIncludeExtensionsFromActiveFilters()
+    {
+        var activeExtensions = new List<string>();
+
+        if (IsPhotosActive) activeExtensions.Add(_filterGroups["photos"]);
+        if (IsDocsActive) activeExtensions.Add(_filterGroups["docs"]);
+        if (IsVideoActive) activeExtensions.Add(_filterGroups["video"]);
+        if (IsAudioActive) activeExtensions.Add(_filterGroups["audio"]);
+
+        if (activeExtensions.Count == 0)
+        {
+            IsAllActive = true;
+            IncludeExtensions = "";
+        }
+        else
+        {
+            IsAllActive = false;
+            IncludeExtensions = string.Join(", ", activeExtensions);
+        }
+    }
+
+    [RelayCommand]
     private void CancelBackup()
     {
         _backupCts?.Cancel();
@@ -169,6 +244,8 @@ public partial class MainViewModel : ObservableObject
         _backupCts = new CancellationTokenSource();
         var progressReporter = new Progress<BackupProgressReport>(UpdateProgress);
 
+        var extensions = IncludeExtensions?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
         try
         {
             var report = await _backupEngine.ExecuteAsync(
@@ -177,7 +254,8 @@ public partial class MainViewModel : ObservableObject
                 _backupStrategy, 
                 ParallelDegree, 
                 progressReporter, 
-                _backupCts.Token);
+                _backupCts.Token,
+                extensions);
 
             await _navigationService.NavigateToAsync(new ReportPage(report));
         }
@@ -208,6 +286,7 @@ public partial class MainViewModel : ObservableObject
         StatsCopied = 0;
         StatsFailed = 0;
         CurrentFileStatus = "Iniciando...";
+        LogItems.Clear();
     }
 
     private void UpdateProgress(BackupProgressReport report)
@@ -227,7 +306,25 @@ public partial class MainViewModel : ObservableObject
                 BackupPhase.Copying => $"Copiando: {report.CurrentItem}",
                 _ => CurrentFileStatus
             };
+
+            if (report.Phase == BackupPhase.Copying && !string.IsNullOrEmpty(report.CurrentItem))
+            {
+                AddLogEntry($"Copiado: {report.CurrentItem}", 
+                    Application.Current?.RequestedTheme == AppTheme.Dark ? Colors.LightGray : Colors.DimGray);
+            }
+            else if (report.Phase == BackupPhase.Scanning && report.FailedCount > StatsFailed)
+            {
+                AddLogEntry($"Error/Omitido: {report.CurrentItem}", Colors.Red);
+            }
         });
+    }
+
+    private void AddLogEntry(string message, Color color)
+    {
+        var entry = new LogEntry(message, DateTime.Now.ToString("HH:mm:ss"), color);
+        if (LogItems.Count >= 100)
+            LogItems.RemoveAt(0);
+        LogItems.Add(entry);
     }
 
     private static string FormatBytes(long bytes) => bytes switch

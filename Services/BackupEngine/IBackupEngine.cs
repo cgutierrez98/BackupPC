@@ -12,5 +12,6 @@ public interface IBackupEngine
         IBackupStrategy strategy,
         int parallelDegree,
         IProgress<BackupProgressReport> progress,
-        CancellationToken token);
+        CancellationToken token,
+        IEnumerable<string>? includeExtensions = null);
 }

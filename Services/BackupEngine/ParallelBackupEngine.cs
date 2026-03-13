@@ -22,7 +22,8 @@ public class ParallelBackupEngine : IBackupEngine
         IBackupStrategy strategy,
         int parallelDegree,
         IProgress<BackupProgressReport> progress,
-        CancellationToken token)
+        CancellationToken token,
+        IEnumerable<string>? includeExtensions = null)
     {
         var startedAt = DateTime.Now;
         var failedFiles = new List<string>();
@@ -33,9 +34,20 @@ public class ParallelBackupEngine : IBackupEngine
         long processedBytes = 0;
         long copiedBytes = 0;
 
+        // Normalizar extensiones (asegurar que empiecen por punto y sean minúsculas)
+        var allowedExtensions = includeExtensions?
+            .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Select(e => e.Trim().ToLower())
+            .Select(e => e.StartsWith(".") ? e : "." + e)
+            .ToHashSet();
+
+        bool hasFilter = allowedExtensions != null && allowedExtensions.Count > 0;
+
         // 1. Fase de Pre-escaneo
         progress.Report(new BackupProgressReport(BackupPhase.Preparing, "Analizando tamaño total..."));
-        var (totalFiles, totalBytes) = await _scannerService.GetTotalFilesAndSizeAsync(sources.Select(s => s.Path), token);
+        
+        // El pre-escaneo también debería filtrar para dar un estimado real
+        var (totalFiles, totalBytes) = await GetFilteredTotalAsync(sources.Select(s => s.Path), allowedExtensions, token);
 
         // 2. Setup de Canal
         var channel = Channel.CreateBounded<(FileInfo fi, string relPath, string dstPath)>(
@@ -53,6 +65,10 @@ public class ParallelBackupEngine : IBackupEngine
                     await foreach (var fi in _scannerService.EnumerateFilesAsync(source.Path, token))
                     {
                         token.ThrowIfCancellationRequested();
+
+                        // Filtro de extensiones
+                        if (hasFilter && !allowedExtensions!.Contains(fi.Extension.ToLower()))
+                            continue;
 
                         string relPath = Path.GetRelativePath(source.Path, fi.FullName);
                         string dstPath = Path.Combine(destination.BackupPath!, relPath);
@@ -152,5 +168,33 @@ public class ParallelBackupEngine : IBackupEngine
             FailedFiles = failedFiles,
             CopiedFiles = copiedFileNames
         };
+    }
+
+    private async Task<(int TotalFiles, long TotalBytes)> GetFilteredTotalAsync(
+        IEnumerable<string> paths, HashSet<string>? allowedExts, CancellationToken token)
+    {
+        // Si no hay filtro, usar el método rápido del servicio
+        if (allowedExts == null || allowedExts.Count == 0)
+            return await _scannerService.GetTotalFilesAndSizeAsync(paths, token);
+
+        int totalFiles = 0;
+        long totalBytes = 0;
+
+        foreach (var path in paths)
+        {
+            if (!Directory.Exists(path)) continue;
+
+            await foreach (var fi in _scannerService.EnumerateFilesAsync(path, token))
+            {
+                token.ThrowIfCancellationRequested();
+                if (allowedExts.Contains(fi.Extension.ToLower()))
+                {
+                    totalFiles++;
+                    totalBytes += fi.Length;
+                }
+            }
+        }
+
+        return (totalFiles, totalBytes);
     }
 }
