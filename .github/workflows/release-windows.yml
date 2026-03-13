@@ -24,11 +24,11 @@ jobs:
         run: dotnet workload install maui
 
       - name: Restore dependencies
-        run: dotnet restore LocalBackupMaster/LocalBackupMaster.csproj
+        run: dotnet restore LocalBackupMaster.csproj
 
       - name: Publish Windows App
         run: |
-          dotnet publish LocalBackupMaster/LocalBackupMaster.csproj `
+          dotnet publish LocalBackupMaster.csproj `
             -f net9.0-windows10.0.19041.0 `
             -c Release `
             -p:RuntimeIdentifier=win-x64 `

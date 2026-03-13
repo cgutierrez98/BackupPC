@@ -34,7 +34,7 @@ Sigue la filosofía **"Local First"**: Privacidad total, sin dependencia de la n
 - Windows 10 (1809+) o Windows 11 / macOS Monterey+
 
 ### Compilación y Ejecución (Windows)
-Desde la terminal en el directorio `/LocalBackupMaster`:
+Desde la terminal en el directorio raíz del proyecto:
 
 ```bash
 # Restaurar dependencias
