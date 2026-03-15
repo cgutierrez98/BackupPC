@@ -13,7 +13,11 @@
     <Compile Include="..\Services\IDatabaseService.cs" Link="IDatabaseService.cs" />
     <Compile Include="..\Services\Strategies\IBackupStrategy.cs" Link="IBackupStrategy.cs" />
     <Compile Include="..\Services\Strategies\IncrementalHashStrategy.cs" Link="IncrementalHashStrategy.cs" />
+    <Compile Include="..\Services\Validation\IBackupValidator.cs" Link="IBackupValidator.cs" />
+    <Compile Include="..\Services\IReportExportService.cs" Link="IReportExportService.cs" />
+    <Compile Include="..\Services\JsonReportExportService.cs" Link="JsonReportExportService.cs" />
     <Compile Include="..\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
+    <Compile Include="..\Models\Backup\*.cs" Link="Models\Backup\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

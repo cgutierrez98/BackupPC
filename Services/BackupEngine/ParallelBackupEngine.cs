@@ -152,13 +152,42 @@ public class ParallelBackupEngine : IBackupEngine
                     }
                     else
                     {
-                        lock (failedFiles) failedFiles.Add($"{fi.Name}: {copyResult.FailReason}");
+                        var failTag = copyResult.IsLocked ? "[BLOQUEADO] " : "[ERROR] ";
+                        var failMsg = $"{failTag}{fi.Name}: {copyResult.FailReason}";
+                        lock (failedFiles) failedFiles.Add(failMsg);
+
+                        var currentProgress = totalBytes > 0 ? (double)processedBytes / totalBytes : 0;
+                        currentProgress = Math.Clamp(currentProgress, 0, 1);
+
+                        progress.Report(new BackupProgressReport(
+                            BackupPhase.Copying,
+                            fi.Name,
+                            currentProgress,
+                            scannedCount,
+                            copiedCount,
+                            failedFiles.Count,
+                            totalBytes,
+                            processedBytes,
+                            LastErrorMessage: failMsg,
+                            LastErrorIsWarning: copyResult.IsLocked));
                     }
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
-                    lock (failedFiles) failedFiles.Add($"{fi.Name}: {ex.Message}");
+                    var errorMsg = $"[CRÍTICO] {fi.Name}: {ex.Message}";
+                    lock (failedFiles) failedFiles.Add(errorMsg);
+                    
+                    progress.Report(new BackupProgressReport(
+                        BackupPhase.Copying,
+                        fi.Name,
+                        0,
+                        scannedCount,
+                        copiedCount,
+                        failedFiles.Count,
+                        totalBytes,
+                        processedBytes,
+                        LastErrorMessage: errorMsg));
                 }
             }
         }, token)).ToArray();

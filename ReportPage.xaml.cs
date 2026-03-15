@@ -169,24 +169,53 @@ public partial class ReportPage : ContentPage
             await btn.ScaleTo(1.00, 90, Easing.CubicIn);
         }
 
-        if (_exportService == null || _notificationService == null) return;
-
-        try
+        // Ejecutar en el hilo principal para asegurar acceso a la UI y diálogos
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            var fileName = $"BackupReport_{_report.FinishedAt:yyyyMMdd_HHmm}.json";
-            
-            // Usamos un stream vacío porque solo queremos la ruta para que la librearía FileSaver abra el diálogo
-            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(_report)));
-            var result = await FileSaver.Default.SaveAsync(fileName, stream, CancellationToken.None);
-            
-            if (result.IsSuccessful)
+            try
             {
-                await _notificationService.ShowSuccessAsync("Informe exportado correctamente");
+                // 1. Intentar resolver el servicio de notificaciones de varias formas
+                var notificationService = _notificationService 
+                    ?? Handler?.MauiContext?.Services.GetService<INotificationService>()
+                    ?? Application.Current?.Handler?.MauiContext?.Services.GetService<INotificationService>();
+
+                // 2. Preparar el nombre del archivo
+                string timeStamp = _report.FinishedAt.ToString("yyyyMMdd_HHmm");
+                string fileName = $"BackupReport_{timeStamp}.json";
+
+                // 3. Generar el JSON con formato amigable
+                var options = new System.Text.Json.JsonSerializerOptions 
+                { 
+                    WriteIndented = true,
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                };
+                string json = System.Text.Json.JsonSerializer.Serialize(_report, options);
+                
+                // 4. Crear el stream del contenido
+                byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+                using var stream = new MemoryStream(bytes);
+
+                // 5. Llamar al FileSaver
+                var result = await FileSaver.Default.SaveAsync(fileName, stream, CancellationToken.None);
+
+                if (result != null && result.IsSuccessful)
+                {
+                    // Dar un respiro para que el foco vuelva de la ventana de guardado de Windows a la app
+                    await Task.Delay(300);
+                    
+                    await DisplayAlert("Éxito", "Informe exportado correctamente.", "OK");
+                }
+                else if (result != null && result.Exception != null)
+                {
+                    await DisplayAlert("Error de Guardado", result.Exception.Message, "OK");
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", $"No se pudo exportar el informe: {ex.Message}", "OK");
-        }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error en Exportación", 
+                    $"Ocurrió un fallo inesperado: {ex.Message}", 
+                    "OK");
+            }
+        });
     }
 }

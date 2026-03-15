@@ -18,6 +18,7 @@ public class FileProcessResult
     public string FilePath { get; set; } = string.Empty;
     public bool Success { get; set; }
     public string? FailReason { get; set; }
+    public bool IsLocked { get; set; }
 }
 
 public class BackupScannerService : IBackupScannerService
@@ -248,12 +249,21 @@ public class BackupScannerService : IBackupScannerService
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
+            bool isLocked = IsFileLocked(ex);
             return new FileProcessResult
             {
                 FilePath = sourcePath,
                 Success = false,
-                FailReason = ex.Message
+                FailReason = isLocked ? "El archivo está abierto por otro programa" : ex.Message,
+                IsLocked = isLocked
             };
         }
+    }
+
+    private static bool IsFileLocked(Exception ex)
+    {
+        // HResult 0x80070020 = ERROR_SHARING_VIOLATION
+        // HResult 0x80070021 = ERROR_LOCK_VIOLATION
+        return (uint)ex.HResult == 0x80070020 || (uint)ex.HResult == 0x80070021;
     }
 }

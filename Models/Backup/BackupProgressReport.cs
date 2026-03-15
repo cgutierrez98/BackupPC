@@ -19,4 +19,6 @@ public record BackupProgressReport(
     int FailedCount = 0,
     long TotalBytes = 0,
     long ProcessedBytes = 0,
-    List<string>? Errors = null);
+    List<string>? Errors = null,
+    string? LastErrorMessage = null,
+    bool LastErrorIsWarning = false);

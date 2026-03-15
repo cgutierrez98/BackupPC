@@ -356,14 +356,15 @@ public partial class MainViewModel : ObservableObject
                 _ => CurrentFileStatus
             };
 
-            if (report.Phase == BackupPhase.Copying && !string.IsNullOrEmpty(report.CurrentItem))
+            if (!string.IsNullOrEmpty(report.LastErrorMessage))
+            {
+                var color = report.LastErrorIsWarning ? Colors.Orange : Colors.Red;
+                AddLogEntry(report.LastErrorMessage, color);
+            }
+            else if (report.Phase == BackupPhase.Copying && !string.IsNullOrEmpty(report.CurrentItem))
             {
                 AddLogEntry($"Copiado: {report.CurrentItem}", 
                     Application.Current?.RequestedTheme == AppTheme.Dark ? Colors.LightGray : Colors.DimGray);
-            }
-            else if (report.Phase == BackupPhase.Scanning && report.FailedCount > StatsFailed)
-            {
-                AddLogEntry($"Error/Omitido: {report.CurrentItem}", Colors.Red);
             }
         });
     }
