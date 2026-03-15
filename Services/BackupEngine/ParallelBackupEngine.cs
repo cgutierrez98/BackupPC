@@ -7,10 +7,10 @@ namespace LocalBackupMaster.Services.BackupEngine;
 
 public class ParallelBackupEngine : IBackupEngine
 {
-    private readonly BackupScannerService _scannerService;
-    private readonly DatabaseService _databaseService;
+    private readonly IBackupScannerService _scannerService;
+    private readonly IDatabaseService _databaseService;
 
-    public ParallelBackupEngine(BackupScannerService scannerService, DatabaseService databaseService)
+    public ParallelBackupEngine(IBackupScannerService scannerService, IDatabaseService databaseService)
     {
         _scannerService = scannerService;
         _databaseService = databaseService;
@@ -42,6 +42,11 @@ public class ParallelBackupEngine : IBackupEngine
             .ToHashSet();
 
         bool hasFilter = allowedExtensions != null && allowedExtensions.Count > 0;
+
+        if (string.IsNullOrEmpty(destination.BackupPath) || !Directory.Exists(destination.BackupPath))
+        {
+            throw new DirectoryNotFoundException($"El destino '{destination.BackupPath}' no está disponible.");
+        }
 
         // 1. Fase de Pre-escaneo
         progress.Report(new BackupProgressReport(BackupPhase.Preparing, "Analizando tamaño total..."));
@@ -80,10 +85,13 @@ public class ParallelBackupEngine : IBackupEngine
                         Interlocked.Increment(ref scannedCount);
                         Interlocked.Add(ref processedBytes, fi.Length);
 
+                        var currentProgress = totalBytes > 0 ? (double)processedBytes / totalBytes : 0;
+                        currentProgress = Math.Clamp(currentProgress, 0, 1);
+
                         progress.Report(new BackupProgressReport(
                             BackupPhase.Scanning,
                             fi.Name,
-                            totalBytes > 0 ? (double)processedBytes / totalBytes : 0,
+                            currentProgress,
                             scannedCount,
                             copiedCount,
                             failedFiles.Count,
@@ -129,10 +137,13 @@ public class ParallelBackupEngine : IBackupEngine
                         Interlocked.Increment(ref copiedCount);
                         lock (copiedFileNames) copiedFileNames.Add(fi.Name);
 
+                        var currentProgress = totalBytes > 0 ? (double)processedBytes / totalBytes : 0;
+                        currentProgress = Math.Clamp(currentProgress, 0, 1);
+
                         progress.Report(new BackupProgressReport(
                             BackupPhase.Copying,
                             fi.Name,
-                            totalBytes > 0 ? (double)processedBytes / totalBytes : 0,
+                            currentProgress,
                             scannedCount,
                             copiedCount,
                             failedFiles.Count,
@@ -154,6 +165,8 @@ public class ParallelBackupEngine : IBackupEngine
 
         await producerTask;
         await Task.WhenAll(consumerTasks);
+
+        progress.Report(new BackupProgressReport(BackupPhase.Completed, "Generando reporte final..."));
 
         return new BackupReport
         {

@@ -14,13 +14,11 @@ public class AppDbContext : DbContext
     // Constructor sin parámetros (para migraciones y uso directo)
     public AppDbContext()
     {
-        Database.EnsureCreated();
     }
 
     // Constructor para IDbContextFactory (inyección de dependencias)
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
-        Database.EnsureCreated();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -9,7 +9,7 @@ namespace LocalBackupMaster.Services;
 /// Servicio de acceso a datos. Usa IDbContextFactory para crear un DbContext
 /// independiente por cada operación, garantizando seguridad en entornos multi-hilo.
 /// </summary>
-public class DatabaseService
+public class DatabaseService : IDatabaseService
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
 

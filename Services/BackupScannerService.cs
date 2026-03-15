@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Polly;
+using Polly.Retry;
 
 namespace LocalBackupMaster.Services;
 
@@ -18,11 +20,29 @@ public class FileProcessResult
     public string? FailReason { get; set; }
 }
 
-public class BackupScannerService
+public class BackupScannerService : IBackupScannerService
 {
     private const string IgnoreFileName = ".backupignore";
     private const int MaxRetries = 3;
     private const int RetryDelayMs = 500;
+
+    private readonly AsyncRetryPolicy _retryPolicy;
+
+    public BackupScannerService()
+    {
+        _retryPolicy = Policy
+            .Handle<IOException>()
+            .WaitAndRetryAsync(MaxRetries, attempt => TimeSpan.FromMilliseconds(RetryDelayMs * attempt),
+                (ex, time, attempt, context) =>
+                {
+                    Console.WriteLine($"[Resilience] Intento {attempt} tras fallo: {ex.Message}");
+                });
+    }
+
+    private static readonly HashSet<string> DefaultBlacklist = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".git", "node_modules", "bin", "obj", ".vs", ".DS_Store", "desktop.ini", "Thumbs.db", "$RECYCLE.BIN"
+    };
 
     // ────────────────────────────────────────────────
     //  .backupignore helpers
@@ -48,12 +68,18 @@ public class BackupScannerService
     /// Comprueba si la ruta relativa de un archivo coincide con algún patrón de exclusión.
     /// Soporta patrones con comodines simples: * y **.
     /// </summary>
-    private static bool IsIgnored(string relativePath, HashSet<string> patterns)
+    internal static bool IsIgnored(string relativePath, HashSet<string> patterns)
     {
+        var segments = relativePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+
+        // 1. Check against Default Blacklist
+        if (segments.Any(s => DefaultBlacklist.Contains(s)))
+            return true;
+
+        // 2. Check against .backupignore patterns
         foreach (var pattern in patterns)
         {
             // Comprobación de directorio: si el patrón no tiene *, compara segmentos
-            var segments = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             if (segments.Any(s => s.Equals(pattern.TrimEnd('/').TrimEnd('\\'), StringComparison.OrdinalIgnoreCase)))
                 return true;
 
@@ -180,7 +206,7 @@ public class BackupScannerService
     public async Task<string> CalculateXXHash64Async(
         string filePath, CancellationToken cancellationToken = default)
     {
-        for (int attempt = 1; attempt <= MaxRetries; attempt++)
+        return await _retryPolicy.ExecuteAsync(async () =>
         {
             try
             {
@@ -190,19 +216,13 @@ public class BackupScannerService
                 await hasher.AppendAsync(fileStream, cancellationToken);
                 return Convert.ToHexString(hasher.GetCurrentHash());
             }
-            catch (IOException) when (attempt < MaxRetries)
-            {
-                // Archivo bloqueado: esperamos y reintentamos
-                await Task.Delay(RetryDelayMs * attempt, cancellationToken);
-            }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
                 Console.WriteLine($"[Hash] Error irrecuperable en {filePath}: {ex.Message}");
                 return string.Empty;
             }
-        }
-        return string.Empty;
+        });
     }
 
     // ────────────────────────────────────────────────
@@ -216,37 +236,24 @@ public class BackupScannerService
     public async Task<FileProcessResult> TryCopyWithRetryAsync(
         string sourcePath, string destPath, CancellationToken cancellationToken = default)
     {
-        for (int attempt = 1; attempt <= MaxRetries; attempt++)
+        try
         {
-            try
+            return await _retryPolicy.ExecuteAsync(async () =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await Task.Run(() => File.Copy(sourcePath, destPath, overwrite: true), cancellationToken);
                 return new FileProcessResult { FilePath = sourcePath, Success = true };
-            }
-            catch (IOException ex) when (attempt < MaxRetries)
-            {
-                // Archivo bloqueado por otro proceso: esperamos y reintentamos
-                await Task.Delay(RetryDelayMs * attempt, cancellationToken);
-                Console.WriteLine($"[Copy] Reintento {attempt} para {sourcePath}: {ex.Message}");
-            }
-            catch (OperationCanceledException) { throw; }
-            catch (Exception ex)
-            {
-                return new FileProcessResult
-                {
-                    FilePath = sourcePath,
-                    Success = false,
-                    FailReason = ex.Message
-                };
-            }
+            });
         }
-
-        return new FileProcessResult
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
         {
-            FilePath = sourcePath,
-            Success = false,
-            FailReason = "Archivo bloqueado después de varios intentos."
-        };
+            return new FileProcessResult
+            {
+                FilePath = sourcePath,
+                Success = false,
+                FailReason = ex.Message
+            };
+        }
     }
 }

@@ -234,7 +234,7 @@
                     </Border>
 
                     <!-- Consola de Actividad -->
-                    <Border x:Name="ConsoleCard" IsVisible="{Binding IsBusy}" StrokeThickness="0" 
+                    <Border x:Name="ConsoleCard" IsVisible="{Binding ShowActivityLog}" StrokeThickness="0" 
                             BackgroundColor="{AppThemeBinding Light=#121212, Dark=#000000}" 
                             Padding="15" HeightRequest="250">
                         <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>

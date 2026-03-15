@@ -161,12 +161,18 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- ══ Botón volver ══ -->
-            <Button x:Name="BackBtn" Text="← Volver al inicio"
-                    Clicked="OnBackClicked"
-                    CornerRadius="10" BackgroundColor="#0078D4" TextColor="White"
-                    FontFamily="OpenSansSemibold" HeightRequest="50"
-                    Margin="0,5,0,20" Opacity="0"/>
+            <!-- ══ Botones de acción ══ -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,5,0,20">
+                <Button x:Name="BackBtn" Grid.Column="0" Text="← Volver al inicio"
+                        Clicked="OnBackClicked"
+                        CornerRadius="10" BackgroundColor="#666" TextColor="White"
+                        FontFamily="OpenSansSemibold" HeightRequest="50" Opacity="0"/>
+
+                <Button x:Name="ExportBtn" Grid.Column="1" Text="💾 Exportar JSON"
+                        Clicked="OnExportClicked"
+                        CornerRadius="10" BackgroundColor="#0078D4" TextColor="White"
+                        FontFamily="OpenSansSemibold" HeightRequest="50" Opacity="0"/>
+            </Grid>
 
         </VerticalStackLayout>
     </ScrollView>

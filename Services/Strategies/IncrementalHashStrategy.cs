@@ -5,10 +5,10 @@ namespace LocalBackupMaster.Services.Strategies;
 
 public class IncrementalHashStrategy : IBackupStrategy
 {
-    private readonly DatabaseService _databaseService;
-    private readonly BackupScannerService _scannerService;
+    private readonly IDatabaseService _databaseService;
+    private readonly IBackupScannerService _scannerService;
 
-    public IncrementalHashStrategy(DatabaseService databaseService, BackupScannerService scannerService)
+    public IncrementalHashStrategy(IDatabaseService databaseService, IBackupScannerService scannerService)
     {
         _databaseService = databaseService;
         _scannerService = scannerService;

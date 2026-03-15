@@ -11,14 +11,14 @@ public class BackupValidator : IBackupValidator
 {
     public (bool IsValid, string Message) Validate(IEnumerable<BackupSource> sources, IEnumerable<BackupDestination> destinations)
     {
-        if (!sources.Any())
+        if (sources == null || !sources.Any())
             return (false, "Añade al menos una carpeta de origen.");
 
-        if (!destinations.Any())
+        if (destinations == null || !destinations.Any())
             return (false, "Añade al menos una unidad de destino.");
 
-        var dest = destinations.First();
-        if (string.IsNullOrEmpty(dest.BackupPath))
+        var dest = destinations.FirstOrDefault();
+        if (dest == null || string.IsNullOrEmpty(dest.BackupPath))
             return (false, "La ruta de destino no es válida o está vacía.");
 
         if (!Directory.Exists(dest.BackupPath))

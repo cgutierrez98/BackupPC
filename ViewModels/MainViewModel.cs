@@ -16,12 +16,13 @@ public record LogEntry(string Message, string Timestamp, Color Color);
 
 public partial class MainViewModel : ObservableObject
 {
-    private readonly DatabaseService _databaseService;
+    private readonly IDatabaseService _databaseService;
     private readonly DeviceWatcherService _deviceWatcherService;
     private readonly IBackupEngine _backupEngine;
     private readonly IBackupStrategy _backupStrategy;
     private readonly INavigationService _navigationService;
     private readonly IBackupValidator _backupValidator;
+    private readonly INotificationService _notificationService;
 
     private readonly Dictionary<string, string> _filterGroups = new()
     {
@@ -47,6 +48,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isVideoActive;
     [ObservableProperty] private bool _isAudioActive;
     [ObservableProperty] private bool _isAllActive = true;
+    [ObservableProperty] private bool _showActivityLog;
 
     [ObservableProperty]
     private string _currentFileStatus = "Listo para comenzar";
@@ -74,12 +76,13 @@ public partial class MainViewModel : ObservableObject
 
     private CancellationTokenSource? _backupCts;
 
-    public MainViewModel(DatabaseService databaseService,
+    public MainViewModel(IDatabaseService databaseService,
                          DeviceWatcherService deviceWatcherService,
                          IBackupEngine backupEngine,
                          IBackupStrategy backupStrategy,
                          INavigationService navigationService,
-                         IBackupValidator backupValidator)
+                         IBackupValidator backupValidator,
+                         INotificationService notificationService)
     {
         _databaseService = databaseService;
         _deviceWatcherService = deviceWatcherService;
@@ -87,6 +90,7 @@ public partial class MainViewModel : ObservableObject
         _backupStrategy = backupStrategy;
         _navigationService = navigationService;
         _backupValidator = backupValidator;
+        _notificationService = notificationService;
 
         _deviceWatcherService.DeviceConnected += OnDeviceConnected;
         _deviceWatcherService.DeviceDisconnected += OnDeviceDisconnected;
@@ -95,6 +99,7 @@ public partial class MainViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
+        ShowActivityLog = false;
         SourceItems.Clear();
         foreach (var s in await _databaseService.GetSourcesAsync())
             SourceItems.Add(s);
@@ -239,6 +244,7 @@ public partial class MainViewModel : ObservableObject
 
         IsBusy = true;
         CanCancel = true;
+        ShowActivityLog = true;
         ResetStats();
 
         _backupCts = new CancellationTokenSource();
@@ -248,16 +254,41 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
+            var destination = DestinationItems.FirstOrDefault();
+            if (destination == null)
+            {
+                await _navigationService.DisplayAlertAsync("Atención", "No hay un destino seleccionado.", "OK");
+                return;
+            }
+
             var report = await _backupEngine.ExecuteAsync(
                 SourceItems.ToList(), 
-                DestinationItems.First(), 
+                destination, 
                 _backupStrategy, 
                 ParallelDegree, 
                 progressReporter, 
                 _backupCts.Token,
                 extensions);
 
-            await _navigationService.NavigateToAsync(new ReportPage(report));
+            if (report == null) throw new Exception("El motor de backup no generó un reporte.");
+
+            // Aseguramos que la UI refleja el 100% antes de saltar
+            GlobalProgress = 1.0;
+            PercentageText = "100%";
+            CurrentFileStatus = "Finalizado. Preparando reporte...";
+            
+            // Un pequeño respiro para que WinUI termine animaciones de la ProgressBar
+            await Task.Delay(500);
+
+            // Navegar en el hilo principal de forma explícita
+            await MainThread.InvokeOnMainThreadAsync(async () => {
+                try {
+                    await _navigationService.NavigateToAsync(new ReportPage(report));
+                } catch (Exception navEx) {
+                    AddLogEntry($"ERROR NAV: {navEx.Message}", Colors.Red);
+                    await _navigationService.DisplayAlertAsync("Error de Navegación", $"No se pudo abrir la pantalla de reporte: {navEx.Message}", "OK");
+                }
+            });
         }
         catch (OperationCanceledException)
         {
@@ -266,13 +297,26 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await _navigationService.DisplayAlertAsync("Error", $"No pudimos completar el backup:\n{ex.Message}", "OK");
-            CurrentFileStatus = "Error durante el backup.";
+            // Loguear error técnico completo para depuración
+            var inner = ex.InnerException != null ? $"\nInner: {ex.InnerException.Message}" : "";
+            var errorMsg = $"Error: {ex.Message}{inner}\nStack: {ex.StackTrace}";
+            
+            AddLogEntry($"CRASH: {ex.Message}", Colors.Red);
+            if (ex.InnerException != null) AddLogEntry($"INNER: {ex.InnerException.Message}", Colors.Red);
+            
+            Console.WriteLine(errorMsg);
+            
+            await _navigationService.DisplayAlertAsync("Error de Ejecución", 
+                $"No pudimos completar el backup:\n{ex.Message}{inner}\n\nRevisa el log de actividad para más detalles.", "OK");
+            
+            CurrentFileStatus = "Error fatal durante la ejecución.";
+            ShowActivityLog = true; // Asegurar que el log se queda visible
         }
         finally
         {
             IsBusy = false;
             CanCancel = false;
+            // No reseteamos ShowActivityLog aquí para que el usuario pueda leer el error
             _backupCts?.Dispose();
             _backupCts = null;
         }
@@ -291,8 +335,13 @@ public partial class MainViewModel : ObservableObject
 
     private void UpdateProgress(BackupProgressReport report)
     {
+        // Si ya no estamos en modo busy (ej: terminando o cancelando), ignorar updates tardíos
+        if (!IsBusy && report.Phase != BackupPhase.Completed) return;
+
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            if (!IsBusy && report.Phase != BackupPhase.Completed) return;
+
             StatsScanned = report.ScannedCount;
             StatsCopied = report.CopiedCount;
             StatsFailed = report.FailedCount;

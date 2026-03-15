@@ -42,6 +42,7 @@ dotnet restore
 
 # Compilar y ejecutar
 dotnet run -f net9.0-windows10.0.19041.0
+dotnet build LocalBackupMaster.csproj -f net9.0-windows10.0.19041.0
 ```
 
 ---

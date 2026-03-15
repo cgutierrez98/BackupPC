@@ -17,7 +17,14 @@ public partial class MainPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await _viewModel.InitializeAsync();
+        try
+        {
+            await _viewModel.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing: {ex.Message}");
+        }
 
         _ = HeaderTitle.FadeTo(1, 600);
         _ = HeaderTitle.TranslateTo(0, 0, 600, Easing.CubicOut);

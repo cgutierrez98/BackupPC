@@ -26,6 +26,12 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore LocalBackupMaster.csproj
 
+      - name: Restore tests
+        run: dotnet restore LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj
+
+      - name: Run tests
+        run: dotnet test LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj --configuration Release --no-restore
+
       - name: Publish Windows App
         run: |
           dotnet publish LocalBackupMaster.csproj `

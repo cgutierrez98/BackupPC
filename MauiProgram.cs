@@ -30,9 +30,9 @@ public static class MauiProgram
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
             options.UseSqlite($"Filename={dbPath}"));
 
-        builder.Services.AddSingleton<DatabaseService>();
+        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<DeviceWatcherService>();
-        builder.Services.AddTransient<BackupScannerService>();
+        builder.Services.AddTransient<IBackupScannerService, BackupScannerService>();
 
         // Register Backup Engine and Strategy
         builder.Services.AddTransient<IBackupStrategy, IncrementalHashStrategy>();
@@ -40,7 +40,9 @@ public static class MauiProgram
 
         // Phase 3 Support Services
         builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
+        builder.Services.AddSingleton<INotificationService, MauiNotificationService>();
         builder.Services.AddSingleton<IBackupValidator, BackupValidator>();
+        builder.Services.AddSingleton<IReportExportService, JsonReportExportService>();
 
         // Register ViewModels
         builder.Services.AddSingleton<MainViewModel>();
