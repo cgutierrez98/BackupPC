@@ -1,0 +1,10 @@
+<Project Sdk="WixToolset.Sdk/4.0.0">
+  <PropertyGroup>
+    <OutputName>LocalBackupMaster.Installer</OutputName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.0" />
+    <PackageReference Include="WixToolset.Heat" Version="4.0.0" />
+  </ItemGroup>
+</Project>

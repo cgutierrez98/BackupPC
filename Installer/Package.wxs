@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+    
+    <!-- Definición del Paquete -->
+    <Package Name="Local Backup Master" 
+             Manufacturer="CGutierrez" 
+             Version="1.0.3" 
+             UpgradeCode="4f5e6d7c-8b9a-0a1b-2c3d-4e5f6g7h8i9j"
+             Language="1034"> <!-- 1034 = Español (España) -->
+
+        <SummaryInformation Description="Instalador de Local Backup Master" />
+
+        <!-- Icono para el Panel de Control (Habilitar cuando exista appicon.ico)
+        <Icon Id="AppIcon" SourceFile="appicon.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+        -->
+
+        <!-- Reglas de actualización -->
+        <MajorUpgrade DowngradeErrorMessage="Ya hay una versión más reciente instalada." />
+
+        <!-- Estructura de carpetas -->
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLFOLDER" Name="LocalBackupMaster" />
+        </StandardDirectory>
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="ApplicationProgramsFolder" Name="Local Backup Master"/>
+        </StandardDirectory>
+
+        <!-- Componentes principales (El grueso de archivos se inyectará aquí vía Harvesting) -->
+        <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+            <!-- El contenido real será generado por el script build-msi.ps1 -->
+        </ComponentGroup>
+
+        <!-- Atajos de teclado y menú inicio -->
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut" 
+                          Name="Local Backup Master" 
+                          Description="Copia de seguridad local profesional"
+                          Target="[INSTALLFOLDER]LocalBackupMaster.exe"
+                          WorkingDirectory="INSTALLFOLDER"/>
+                <RemoveFolder Id="CleanUpShortCut" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\CGutierrez\LocalBackupMaster" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+
+        <!-- Definición de la interfaz de usuario (Opcional, requiere WixUIExtension) -->
+        <!-- <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" /> -->
+
+        <Feature Id="Main" Title="Local Backup Master" Level="1">
+            <ComponentGroupRef Id="ProductComponents" />
+            <ComponentRef Id="ApplicationShortcut" />
+            <!-- Referencia al grupo de archivos recolectados (Harvested) -->
+            <ComponentGroupRef Id="HarvestedComponents" />
+        </Feature>
+    </Package>
+</Wix>

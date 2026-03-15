@@ -44,15 +44,31 @@ jobs:
             -p:UseMonoRuntime=false `
             --output ./publish
 
-      - name: Zip Release
+      - name: Install WiX Toolset
+        run: dotnet tool install --global wix
+        
+      - name: Build MSI Installer
         shell: pwsh
-        run: Compress-Archive -Path ./publish/* -DestinationPath ./LocalBackupMaster-Windows-x64.zip
-
+        run: |
+          # 1. Instalar extensiones necesarias
+          wix extension add -g WixToolset.UI.wixext
+          wix extension add -g WixToolset.Util.wixext
+          wix extension add -g WixToolset.Heat
+          
+          # 2. Generar fragmento de archivos (Harvesting)
+          # Usamos heat para recolectar todo lo que hay en ./publish
+          # NOTA: WiX 4/5 tiene formas integradas, pero por ahora usamos wix build con archivos manuales o heat
+          # Por simplicidad en este paso de CI, crearemos un alias o usaremos el .wixproj
+          cd Installer
+          wix build Package.wxs -o ../LocalBackupMaster.msi
+          
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: LocalBackupMaster-Windows-x64.zip
+          files: |
+            LocalBackupMaster-Windows-x64.zip
+            LocalBackupMaster.msi
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

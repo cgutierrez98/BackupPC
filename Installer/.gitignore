@@ -1,0 +1,5 @@
+# WiX build outputs
+obj/
+bin/
+*.msi
+*.wixpdb
