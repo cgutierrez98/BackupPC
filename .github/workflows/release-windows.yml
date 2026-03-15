@@ -57,7 +57,7 @@ jobs:
           # 2. Compilar (Nota: El harvesting manual se añadirá si es necesario, 
           # por ahora Package.wxs usa una estructura simplificada)
           cd Installer
-          wix build Package.wxs -o ../LocalBackupMaster.msi
+          wix build Package.wxs -b ../publish -o ../LocalBackupMaster.msi
 
       - name: Zip Release
         shell: pwsh

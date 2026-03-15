@@ -28,7 +28,7 @@ wix extension add WixToolset.Util.wixext
 # Alternativa: Usar Heat.exe de WiX 3 o herramientas de WiX 4 específicas.
 # Por simplicidad, asumimos que el usuario tiene 'wix' configurado.
 
-wix build Package.wxs -o "$installerOut\$projectName.msi"
+wix build Package.wxs -b $publishDir -o "$installerOut\$projectName.msi"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ ¡Éxito! El instalador se encuentra en: $installerOut\$projectName.msi" -ForegroundColor Green
