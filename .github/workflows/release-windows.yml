@@ -45,23 +45,24 @@ jobs:
             --output ./publish
 
       - name: Install WiX Toolset
-        run: dotnet tool install --global wix
-        
+        run: dotnet tool install --global wix --version 5.0.2
+
       - name: Build MSI Installer
         shell: pwsh
         run: |
-          # 1. Instalar extensiones necesarias
-          wix extension add -g WixToolset.UI.wixext
-          wix extension add -g WixToolset.Util.wixext
-          wix extension add -g WixToolset.Heat
+          # 1. Instalar extensiones compatibles con WiX v5
+          wix extension add -g WixToolset.UI.wixext/5.0.2
+          wix extension add -g WixToolset.Util.wixext/5.0.2
           
-          # 2. Generar fragmento de archivos (Harvesting)
-          # Usamos heat para recolectar todo lo que hay en ./publish
-          # NOTA: WiX 4/5 tiene formas integradas, pero por ahora usamos wix build con archivos manuales o heat
-          # Por simplicidad en este paso de CI, crearemos un alias o usaremos el .wixproj
+          # 2. Compilar (Nota: El harvesting manual se añadirá si es necesario, 
+          # por ahora Package.wxs usa una estructura simplificada)
           cd Installer
           wix build Package.wxs -o ../LocalBackupMaster.msi
-          
+
+      - name: Zip Release
+        shell: pwsh
+        run: Compress-Archive -Path ./publish/* -DestinationPath ./LocalBackupMaster-Windows-x64.zip
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
