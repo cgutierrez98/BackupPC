@@ -29,7 +29,9 @@
                 </Component>
                 
                 <!-- Otros archivos (DLLs, recursos, etc.) se recolectarán aquí -->
-                <Files Include="**" Exclude="LocalBackupMaster.exe" />
+                <Files Include="**">
+                    <Exclude Files="LocalBackupMaster.exe" />
+                </Files>
             </Directory>
         </StandardDirectory>
 
