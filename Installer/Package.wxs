@@ -6,7 +6,7 @@
     <Package Name="Local Backup Master" 
              Manufacturer="CGutierrez" 
              Version="1.0.4" 
-             UpgradeCode="4f5e6d7c-8b9a-0a1b-2c3d-4e5f6g7h8i9j"
+             UpgradeCode="4f5e6d7c-8b9a-0a1b-2c3d-4e5f6a7b8c9d"
              Language="1034"> <!-- 1034 = Español (España) -->
 
         <SummaryInformation Description="Instalador de Local Backup Master" />
