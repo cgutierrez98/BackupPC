@@ -1,4 +1,5 @@
 using LocalBackupMaster.ViewModels;
+using LocalBackupMaster.Helpers;
 
 namespace LocalBackupMaster;
 
@@ -14,9 +15,14 @@ public partial class MainPage : ContentPage
 
     // ─── Ciclo de vida ────────────────────────────────────────────────────────
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
+        _ = OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error initializing: {ex.Message}"));
+    }
+
+    private async Task OnAppearingAsync()
+    {
         try
         {
             await _viewModel.InitializeAsync();
@@ -53,25 +59,33 @@ public partial class MainPage : ContentPage
 
     // ─── Event Handlers (Solo para Animaciones o disparadores simples) ───────
 
-    private async void OnSelectSourceClicked(object? sender, EventArgs e)
+    private void OnSelectSourceClicked(object? sender, EventArgs e) => _ = OnSelectSourceClickedAsync(sender, e).SafeFireAndForget();
+
+    private async Task OnSelectSourceClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
         _viewModel.SelectSourceCommand.Execute(null);
     }
 
-    private async void OnSelectDestinationClicked(object? sender, EventArgs e)
+    private void OnSelectDestinationClicked(object? sender, EventArgs e) => _ = OnSelectDestinationClickedAsync(sender, e).SafeFireAndForget();
+
+    private async Task OnSelectDestinationClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
         _viewModel.SelectDestinationCommand.Execute(null);
     }
 
-    private async void OnCancelBackupClicked(object? sender, EventArgs e)
+    private void OnCancelBackupClicked(object? sender, EventArgs e) => _ = OnCancelBackupClickedAsync(sender, e).SafeFireAndForget();
+
+    private async Task OnCancelBackupClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
         // El comando se vincula en XAML, esto es opcional si solo queremos animación
     }
 
-    private async void OnStartBackupClicked(object? sender, EventArgs e)
+    private void OnStartBackupClicked(object? sender, EventArgs e) => _ = OnStartBackupClickedAsync(sender, e).SafeFireAndForget();
+
+    private async Task OnStartBackupClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
 

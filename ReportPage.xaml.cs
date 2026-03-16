@@ -1,6 +1,7 @@
 using LocalBackupMaster.Models;
 using LocalBackupMaster.Services;
 using CommunityToolkit.Maui.Storage;
+using LocalBackupMaster.Helpers;
 
 namespace LocalBackupMaster;
 
@@ -18,15 +19,20 @@ public partial class ReportPage : ContentPage
     {
         InitializeComponent();
         _report = report;
-        
+
         // Resolución manual de servicios (MAUI no inyecta automáticamente en constructores de Page si se crean manualmente)
         _exportService = Application.Current?.Handler?.MauiContext?.Services.GetService<IReportExportService>();
-        _notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<INotificationService>();
+            _notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<INotificationService>();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
+        _ = OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error in OnAppearing: {ex.Message}"));
+    }
+
+    private async Task OnAppearingAsync()
+    {
         PopulateReport();
         await AnimateEntrance();
     }
@@ -151,7 +157,9 @@ public partial class ReportPage : ContentPage
     // ──────────────────────────────────────────────
     //  Botón volver
     // ──────────────────────────────────────────────
-    private async void OnBackClicked(object? sender, EventArgs e)
+    private void OnBackClicked(object? sender, EventArgs e) => _ = OnBackClickedAsync(sender, e).SafeFireAndForget();
+
+    private async Task OnBackClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn)
         {
@@ -161,7 +169,9 @@ public partial class ReportPage : ContentPage
         await Navigation.PopAsync();
     }
 
-    private async void OnExportClicked(object? sender, EventArgs e)
+    private void OnExportClicked(object? sender, EventArgs e) => _ = OnExportClickedAsync(sender, e).SafeFireAndForget();
+
+    private async Task OnExportClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn)
         {
