@@ -53,6 +53,10 @@ public partial class ReportPage : ContentPage
     // ──────────────────────────────────────────────
     private void PopulateReport()
     {
+        // Si ya hay un ViewModel con las propiedades, no manipular la UI desde el code-behind
+        if (BindingContext is LocalBackupMaster.ViewModels.ReportViewModel)
+            return;
+
         try
         {
             if (_report == null) return;
