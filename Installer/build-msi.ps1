@@ -2,7 +2,7 @@ param(
     [string]$ProjectPath = "..\LocalBackupMaster.csproj",
     [string]$Framework = "net9.0-windows10.0.19041.0",
     [string]$Configuration = "Release",
-    [string]$RuntimeIdentifier = "win10-x64",
+    [string]$RuntimeIdentifier = "win-x64",
     [string]$PublishDir,
     [string]$OutputPath,
     [string]$ProductVersion
@@ -73,7 +73,7 @@ if (-not (Test-Path $mainExecutable)) {
     dotnet publish $resolvedProjectPath `
         -f $Framework `
         -c $Configuration `
-        -p:RuntimeIdentifier=$RuntimeIdentifier `
+        -r $RuntimeIdentifier `
         -p:WindowsPackageType=None `
         -p:SelfContained=true `
         -p:PublishSingleFile=false `
