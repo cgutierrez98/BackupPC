@@ -92,16 +92,16 @@ public partial class ReportViewModel : ObservableObject
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                await _notification_service.ShowErrorAsync("Ruta de archivo no válida.");
+                await _notificationService.ShowErrorAsync("Ruta de archivo no válida.");
                 return;
             }
 
             await _exportService.ExportToJsonAsync(Report, filePath);
-            await _notification_service.ShowSuccessAsync("Informe exportado correctamente.");
+            await _notificationService.ShowSuccessAsync("Informe exportado correctamente.");
         }
         catch (System.Exception ex)
         {
-            await _notification_service.ShowErrorAsync($"Error al exportar: {ex.Message}");
+            await _notificationService.ShowErrorAsync($"Error al exportar: {ex.Message}");
         }
     }
 
@@ -109,5 +109,15 @@ public partial class ReportViewModel : ObservableObject
     {
         var json = JsonSerializer.Serialize(Report, Options);
         return Task.FromResult(json);
+    }
+
+    public Task NotifySavedAsync()
+    {
+        return _notificationService.ShowSuccessAsync("Informe exportado correctamente.");
+    }
+
+    public Task NotifyErrorAsync(string message)
+    {
+        return _notificationService.ShowErrorAsync(message);
     }
 }

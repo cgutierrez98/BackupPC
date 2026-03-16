@@ -39,7 +39,7 @@ public partial class ReportPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _ = OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error in OnAppearing: {ex.Message}"));
+        OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error in OnAppearing: {ex.Message}"));
     }
 
     private async Task OnAppearingAsync()
@@ -172,7 +172,7 @@ public partial class ReportPage : ContentPage
     // ──────────────────────────────────────────────
     //  Botón volver
     // ──────────────────────────────────────────────
-    private void OnBackClicked(object? sender, EventArgs e) => _ = OnBackClickedAsync(sender, e).SafeFireAndForget();
+    private void OnBackClicked(object? sender, EventArgs e) => OnBackClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnBackClickedAsync(object? sender, EventArgs e)
     {
@@ -184,7 +184,7 @@ public partial class ReportPage : ContentPage
         await Navigation.PopAsync();
     }
 
-    private void OnExportClicked(object? sender, EventArgs e) => _ = OnExportClickedAsync(sender, e).SafeFireAndForget();
+    private void OnExportClicked(object? sender, EventArgs e) => OnExportClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnExportClickedAsync(object? sender, EventArgs e)
     {
@@ -236,12 +236,22 @@ public partial class ReportPage : ContentPage
                 {
                     // Dar un respiro para que el foco vuelva de la ventana de guardado de Windows a la app
                     await Task.Delay(300);
-                    
-                    await DisplayAlert("Éxito", "Informe exportado correctamente.", "OK");
+
+                    if (vm != null)
+                    {
+                        await vm.NotifySavedAsync();
+                    }
+                    else
+                    {
+                        await DisplayAlert("Éxito", "Informe exportado correctamente.", "OK");
+                    }
                 }
                 else if (result != null && result.Exception != null)
                 {
-                    await DisplayAlert("Error de Guardado", result.Exception.Message, "OK");
+                    if (vm != null)
+                        await vm.NotifyErrorAsync(result.Exception.Message);
+                    else
+                        await DisplayAlert("Error de Guardado", result.Exception.Message, "OK");
                 }
             }
             catch (Exception ex)

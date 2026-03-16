@@ -18,7 +18,7 @@ public partial class MainPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _ = OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error initializing: {ex.Message}"));
+        OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error initializing: {ex.Message}"));
     }
 
     private async Task OnAppearingAsync()
@@ -59,7 +59,7 @@ public partial class MainPage : ContentPage
 
     // ─── Event Handlers (Solo para Animaciones o disparadores simples) ───────
 
-    private void OnSelectSourceClicked(object? sender, EventArgs e) => _ = OnSelectSourceClickedAsync(sender, e).SafeFireAndForget();
+    private void OnSelectSourceClicked(object? sender, EventArgs e) => OnSelectSourceClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnSelectSourceClickedAsync(object? sender, EventArgs e)
     {
@@ -67,7 +67,7 @@ public partial class MainPage : ContentPage
         _viewModel.SelectSourceCommand.Execute(null);
     }
 
-    private void OnSelectDestinationClicked(object? sender, EventArgs e) => _ = OnSelectDestinationClickedAsync(sender, e).SafeFireAndForget();
+    private void OnSelectDestinationClicked(object? sender, EventArgs e) => OnSelectDestinationClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnSelectDestinationClickedAsync(object? sender, EventArgs e)
     {
@@ -75,7 +75,7 @@ public partial class MainPage : ContentPage
         _viewModel.SelectDestinationCommand.Execute(null);
     }
 
-    private void OnCancelBackupClicked(object? sender, EventArgs e) => _ = OnCancelBackupClickedAsync(sender, e).SafeFireAndForget();
+    private void OnCancelBackupClicked(object? sender, EventArgs e) => OnCancelBackupClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnCancelBackupClickedAsync(object? sender, EventArgs e)
     {
@@ -83,7 +83,7 @@ public partial class MainPage : ContentPage
         // El comando se vincula en XAML, esto es opcional si solo queremos animación
     }
 
-    private void OnStartBackupClicked(object? sender, EventArgs e) => _ = OnStartBackupClickedAsync(sender, e).SafeFireAndForget();
+    private void OnStartBackupClicked(object? sender, EventArgs e) => OnStartBackupClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnStartBackupClickedAsync(object? sender, EventArgs e)
     {
