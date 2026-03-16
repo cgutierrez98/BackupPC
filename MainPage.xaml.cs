@@ -1,5 +1,6 @@
 using LocalBackupMaster.ViewModels;
 using LocalBackupMaster.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LocalBackupMaster;
 
@@ -80,7 +81,12 @@ public partial class MainPage : ContentPage
     private async Task OnCancelBackupClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
-        // El comando se vincula en XAML, esto es opcional si solo queremos animación
+        // Mostrar feedback de cancelación
+        var notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<LocalBackupMaster.Services.INotificationService>();
+        if (notificationService != null)
+        {
+            await notificationService.ShowNotificationAsync("Backup", "Operación cancelada.");
+        }
     }
 
     private void OnStartBackupClicked(object? sender, EventArgs e) => OnStartBackupClickedAsync(sender, e).SafeFireAndForget();
@@ -93,5 +99,11 @@ public partial class MainPage : ContentPage
         ProgressCard.IsVisible = true;
         _ = ProgressCard.FadeTo(1, 400);
         _ = ProgressCard.ScaleTo(1, 400, Easing.SpringOut);
+        // Mostrar feedback de inicio
+        var notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<LocalBackupMaster.Services.INotificationService>();
+        if (notificationService != null)
+        {
+            await notificationService.ShowSuccessAsync("Backup iniciado");
+        }
     }
 }

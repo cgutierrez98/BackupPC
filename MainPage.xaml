@@ -21,8 +21,8 @@
                        HorizontalOptions="Center"
                        Opacity="0" TranslationY="-20" />
 
-                <Label Text="Copia de seguridad local incremental, sin nube."
-                       FontSize="16" TextColor="Gray"
+                  <Label Text="Copia de seguridad local incremental, sin nube."
+                      FontSize="16" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
                        HorizontalOptions="Center"
                        Opacity="0" x:Name="SubHeaderLabel"/>
             </VerticalStackLayout>
@@ -45,8 +45,10 @@
                                 <Label Text="📁  Carpetas de Origen" FontFamily="OpenSansSemibold" FontSize="17"
                                        TextColor="{AppThemeBinding Light=#222, Dark=#EEE}" VerticalOptions="Center"/>
                                 <Button Grid.Column="1" Text="+ Añadir" FontSize="13" CornerRadius="8"
-                                        BackgroundColor="#0078D4" TextColor="White" HeightRequest="36"
-                                        Clicked="OnSelectSourceClicked" x:Name="SelectSourceBtn"/>
+                                    BackgroundColor="#0078D4" TextColor="White" HeightRequest="36"
+                                    Clicked="OnSelectSourceClicked" x:Name="SelectSourceBtn"
+                                    AutomationProperties.Name="Añadir carpeta de origen"
+                                    AutomationProperties.HelpText="Abre el diálogo para seleccionar una carpeta de origen."/>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EBEBEB, Dark=#2E2E2E}"/>
 
@@ -59,11 +61,13 @@
                                             <Label Grid.Column="0" Text="{Binding Path}" FontSize="13"
                                                    TextColor="{AppThemeBinding Light=#444, Dark=#BBB}"
                                                    LineBreakMode="TailTruncation" VerticalOptions="Center"/>
-                                             <Button Grid.Column="1" Text="✕" FontSize="11" WidthRequest="32" HeightRequest="32"
-                                                     CornerRadius="6" BackgroundColor="Transparent"
-                                                     TextColor="Gray" 
-                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveSourceCommand}"
-                                                     CommandParameter="{Binding .}"/>
+                                                            <Button Grid.Column="1" Text="✕" FontSize="13" WidthRequest="44" HeightRequest="44"
+                                                                    CornerRadius="10" BackgroundColor="Transparent"
+                                                                    TextColor="Gray" 
+                                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveSourceCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                                                    AutomationProperties.Name="Eliminar carpeta de origen"
+                                                                    AutomationProperties.HelpText="Elimina esta carpeta de la lista de orígenes."/>
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -83,8 +87,10 @@
                                 <Label Text="💾  Destinos de Backup" FontFamily="OpenSansSemibold" FontSize="17"
                                        TextColor="{AppThemeBinding Light=#222, Dark=#EEE}" VerticalOptions="Center"/>
                                 <Button Grid.Column="1" Text="+ Añadir" FontSize="13" CornerRadius="8"
-                                        BackgroundColor="#0078D4" TextColor="White" HeightRequest="36"
-                                        Clicked="OnSelectDestinationClicked" x:Name="SelectDestinationBtn"/>
+                                    BackgroundColor="#0078D4" TextColor="White" HeightRequest="36"
+                                    Clicked="OnSelectDestinationClicked" x:Name="SelectDestinationBtn"
+                                    AutomationProperties.Name="Añadir destino de backup"
+                                    AutomationProperties.HelpText="Abre el diálogo para seleccionar un destino de backup."/>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EBEBEB, Dark=#2E2E2E}"/>
 
@@ -99,14 +105,16 @@
                                                 <Label Text="{Binding BackupPath}" FontSize="13"
                                                        TextColor="{AppThemeBinding Light=#444, Dark=#BBB}"
                                                        LineBreakMode="TailTruncation"/>
-                                                <Label Text="{Binding Uuid}" FontSize="10" TextColor="Gray"
+                                                      <Label Text="{Binding Uuid}" FontSize="10" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
                                                        LineBreakMode="TailTruncation"/>
                                             </VerticalStackLayout>
-                                             <Button Grid.Column="2" Text="✕" FontSize="11" WidthRequest="32" HeightRequest="32"
-                                                     CornerRadius="6" BackgroundColor="Transparent"
-                                                     TextColor="Gray" 
-                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveDestinationCommand}"
-                                                     CommandParameter="{Binding .}"/>
+                                                     <Button Grid.Column="2" Text="✕" FontSize="13" WidthRequest="44" HeightRequest="44"
+                                                         CornerRadius="10" BackgroundColor="Transparent"
+                                                         TextColor="Gray" 
+                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveDestinationCommand}"
+                                                         CommandParameter="{Binding .}"
+                                                         AutomationProperties.Name="Eliminar destino de backup"
+                                                         AutomationProperties.HelpText="Elimina este destino de la lista."/>
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -131,48 +139,48 @@
                             
                             <!-- Filtro de Extensiones -->
                             <VerticalStackLayout Spacing="8">
-                                <Label Text="Filtrar Contenido" FontSize="13" TextColor="Gray"/>
+                                <Label Text="Filtrar Contenido" FontSize="13" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"/>
                                 <FlexLayout Wrap="Wrap" JustifyContent="Start">
                                     <FlexLayout.Resources>
                                         <Style TargetType="Button">
-                                            <Setter Property="FontSize" Value="10"/>
-                                            <Setter Property="HeightRequest" Value="28"/>
-                                            <Setter Property="Margin" Value="0,0,6,6"/>
-                                            <Setter Property="Padding" Value="8,0"/>
+                                            <Setter Property="FontSize" Value="12"/>
+                                            <Setter Property="HeightRequest" Value="36"/>
+                                            <Setter Property="Margin" Value="0,0,8,8"/>
+                                            <Setter Property="Padding" Value="12,0"/>
                                             <Setter Property="CornerRadius" Value="14"/>
                                             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E1E4E8, Dark=#30363D}"/>
                                             <Setter Property="TextColor" Value="{AppThemeBinding Light=#24292E, Dark=#C9D1D9}"/>
                                         </Style>
                                     </FlexLayout.Resources>
-                                    <Button Text="Todo" Command="{Binding ToggleFilterCommand}" CommandParameter="all">
+                                    <Button Text="Todo" Command="{Binding ToggleFilterCommand}" CommandParameter="all" AutomationProperties.Name="Mostrar todo" AutomationProperties.HelpText="Muestra todos los tipos de archivo en el filtro.">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsAllActive}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="📷 Fotos" Command="{Binding ToggleFilterCommand}" CommandParameter="photos">
+                                    <Button Text="📷 Fotos" Command="{Binding ToggleFilterCommand}" CommandParameter="photos" AutomationProperties.Name="Filtrar fotos" AutomationProperties.HelpText="Filtra para copiar únicamente fotos.">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsPhotosActive}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="Docs" Command="{Binding ToggleFilterCommand}" CommandParameter="docs">
+                                    <Button Text="Docs" Command="{Binding ToggleFilterCommand}" CommandParameter="docs" AutomationProperties.Name="Filtrar documentos" AutomationProperties.HelpText="Filtra para copiar únicamente documentos.">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsDocsActive}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="🎥 Video" Command="{Binding ToggleFilterCommand}" CommandParameter="video">
+                                    <Button Text="🎥 Video" Command="{Binding ToggleFilterCommand}" CommandParameter="video" AutomationProperties.Name="Filtrar vídeos" AutomationProperties.HelpText="Filtra para copiar únicamente vídeos.">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsVideoActive}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="🎵 Audio" Command="{Binding ToggleFilterCommand}" CommandParameter="audio">
+                                    <Button Text="🎵 Audio" Command="{Binding ToggleFilterCommand}" CommandParameter="audio" AutomationProperties.Name="Filtrar audio" AutomationProperties.HelpText="Filtra para copiar únicamente archivos de audio.">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsAudioActive}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
@@ -180,24 +188,27 @@
                                         </Button.Triggers>
                                     </Button>
                                 </FlexLayout>
-                                <Entry Text="{Binding IncludeExtensions}" Placeholder="Filtros manuales..." FontSize="12" BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2C2C2E}"/>
+                                    <Entry Text="{Binding IncludeExtensions}" Placeholder="Filtros manuales..." FontSize="12" BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2C2C2E}"
+                                        AutomationProperties.Name="Filtros manuales" AutomationProperties.HelpText="Escriba extensiones o patrones separados por comas."/>
                             </VerticalStackLayout>
 
                             <!-- Paralelismo -->
                             <VerticalStackLayout Spacing="4">
                                 <Grid ColumnDefinitions="*, Auto">
-                                    <Label Text="Hilos paralelos" FontSize="13" TextColor="Gray" VerticalOptions="Center"/>
+                                    <Label Text="Hilos paralelos" FontSize="13" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" VerticalOptions="Center"/>
                                     <Label Grid.Column="1" Text="{Binding ParallelDegree}" FontFamily="OpenSansSemibold" TextColor="#0078D4" FontSize="16"/>
                                 </Grid>
                                 <Slider Minimum="1" Maximum="8" Value="{Binding ParallelDegree}" MinimumTrackColor="#0078D4"/>
                             </VerticalStackLayout>
 
                             <!-- Iniciar/Cancelar -->
-                            <Button Text="🚀 Iniciar Backup" Command="{Binding StartBackupCommand}" Clicked="OnStartBackupClicked"
-                                    CornerRadius="10" BackgroundColor="#0078D4" TextColor="White" HeightRequest="48" Margin="0,5,0,0"/>
+                                <Button Text="🚀 Iniciar Backup" Command="{Binding StartBackupCommand}" Clicked="OnStartBackupClicked"
+                                    CornerRadius="10" BackgroundColor="#0078D4" TextColor="White" HeightRequest="48" Margin="0,5,0,0"
+                                    AutomationProperties.Name="Iniciar backup" AutomationProperties.HelpText="Inicia el proceso de copia de seguridad."/>
                             
-                            <Button Text="Cancelar" Command="{Binding CancelBackupCommand}" Clicked="OnCancelBackupClicked" 
-                                    IsVisible="{Binding CanCancel}" CornerRadius="10" BackgroundColor="#E81123" TextColor="White" HeightRequest="44"/>
+                                <Button Text="Cancelar" Command="{Binding CancelBackupCommand}" Clicked="OnCancelBackupClicked" 
+                                    IsVisible="{Binding CanCancel}" CornerRadius="10" BackgroundColor="#E81123" TextColor="White" HeightRequest="44"
+                                    AutomationProperties.Name="Cancelar backup" AutomationProperties.HelpText="Cancela el proceso en curso."/>
                         </VerticalStackLayout>
                     </Border>
 
@@ -210,11 +221,12 @@
 
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
-                                <ProgressBar Progress="{Binding GlobalProgress}" ProgressColor="#0078D4" HeightRequest="8" VerticalOptions="Center"/>
+                                <ProgressBar Progress="{Binding GlobalProgress}" ProgressColor="#0078D4" HeightRequest="8" VerticalOptions="Center"
+                                             AutomationProperties.Name="Progreso global" AutomationProperties.HelpText="Barra que indica progreso de la copia."/>
                                 <Label Grid.Column="1" Text="{Binding PercentageText}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="#0078D4" Margin="10,0,0,0"/>
                             </Grid>
                             
-                            <Label Text="{Binding CurrentFileStatus}" FontSize="11" TextColor="Gray" LineBreakMode="TailTruncation" HorizontalOptions="Center"/>
+                            <Label Text="{Binding CurrentFileStatus}" FontSize="11" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" LineBreakMode="TailTruncation" HorizontalOptions="Center"/>
 
                             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
                                 <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
@@ -240,7 +252,7 @@
                         <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
                         <VerticalStackLayout Spacing="5">
                             <Label Text="LOG DE ACTIVIDAD" FontSize="10" FontAttributes="Bold" TextColor="#4DA6FF" Margin="0,0,0,5"/>
-                            <CollectionView ItemsSource="{Binding LogItems}" HeightRequest="200">
+                            <CollectionView ItemsSource="{Binding LogItems}" HeightRequest="200" AutomationProperties.Name="Registro de actividad" AutomationProperties.HelpText="Lista de mensajes de actividad del backup.">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="vm:LogEntry">
                                         <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10" Padding="0,1">
