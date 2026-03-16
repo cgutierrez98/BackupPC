@@ -21,8 +21,19 @@ public partial class ReportPage : ContentPage
         _report = report;
 
         // Resolución manual de servicios (MAUI no inyecta automáticamente en constructores de Page si se crean manualmente)
-        _exportService = Application.Current?.Handler?.MauiContext?.Services.GetService<IReportExportService>();
-            _notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<INotificationService>();
+            var exportService = Application.Current?.Handler?.MauiContext?.Services.GetService<IReportExportService>();
+            var notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<INotificationService>();
+
+            if (exportService != null && notificationService != null)
+            {
+                BindingContext = new LocalBackupMaster.ViewModels.ReportViewModel(report, exportService, notificationService);
+            }
+            else
+            {
+                // Mantener compatibilidad: dejar servicios locales por si acaso
+                _exportService = exportService;
+                _notificationService = notificationService;
+            }
     }
 
     protected override void OnAppearing()
@@ -193,13 +204,22 @@ public partial class ReportPage : ContentPage
                 string timeStamp = _report.FinishedAt.ToString("yyyyMMdd_HHmm");
                 string fileName = $"BackupReport_{timeStamp}.json";
 
-                // 3. Generar el JSON con formato amigable
-                var options = new System.Text.Json.JsonSerializerOptions 
-                { 
-                    WriteIndented = true,
-                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                };
-                string json = System.Text.Json.JsonSerializer.Serialize(_report, options);
+                // 3. Obtener el JSON (delegamos la serialización al ViewModel si está disponible)
+                string json;
+                var vm = BindingContext as LocalBackupMaster.ViewModels.ReportViewModel;
+                if (vm != null)
+                {
+                    json = await vm.GetJsonAsync();
+                }
+                else
+                {
+                    var options = new System.Text.Json.JsonSerializerOptions 
+                    { 
+                        WriteIndented = true,
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                    };
+                    json = System.Text.Json.JsonSerializer.Serialize(_report, options);
+                }
                 
                 // 4. Crear el stream del contenido
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
