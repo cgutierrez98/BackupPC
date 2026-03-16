@@ -50,8 +50,8 @@ jobs:
       - name: Restore dependencies (Windows TFM)
         run: dotnet restore LocalBackupMaster.csproj -f net9.0-windows10.0.19041.0
 
-      - name: Restore tests
-        run: dotnet restore LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj
+      - name: Restore tests (Windows TFM)
+        run: dotnet restore LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj -f net9.0-windows10.0.19041.0
 
       - name: Run tests
         run: dotnet test LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj --configuration Release --no-restore
