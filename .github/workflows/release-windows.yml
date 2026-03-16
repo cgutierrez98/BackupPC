@@ -60,7 +60,8 @@ jobs:
           dotnet publish LocalBackupMaster.csproj `
             -f net9.0-windows10.0.19041.0 `
             -c Release `
-            -p:RuntimeIdentifier=win10-x64 `
+            -p:TargetFramework=net9.0-windows10.0.19041.0 `
+            -r win10-x64 `
             -p:WindowsPackageType=None `
             -p:SelfContained=true `
             -p:PublishSingleFile=false `
