@@ -1,37 +1,103 @@
-# Script de Automatización para generar MSI (WiX v4)
-# Asegúrate de tener WiX Toolset v4 instalado (dotnet tool install --global wix)
+param(
+    [string]$ProjectPath = "..\LocalBackupMaster.csproj",
+    [string]$Framework = "net9.0-windows10.0.19041.0",
+    [string]$Configuration = "Release",
+    [string]$RuntimeIdentifier = "win10-x64",
+    [string]$PublishDir,
+    [string]$OutputPath,
+    [string]$ProductVersion
+)
 
-$projectName = "LocalBackupMaster"
-$publishDir = "..\bin\Release\net9.0-windows10.0.19041.0\win10-x64\publish"
-$installerOut = "..\bin\Release\Installer"
+$ErrorActionPreference = "Stop"
 
-Write-Host "🚀 Iniciando proceso de empaquetado MSI..." -ForegroundColor Cyan
+function Get-NormalizedProductVersion {
+    param(
+        [string]$ProjectFile,
+        [string]$RequestedVersion
+    )
 
-# 1. Publicar la APP como Unpackaged
-Write-Host "📦 Publicando aplicación (Unpackaged)..." -ForegroundColor Yellow
-dotnet publish ..\$projectName.csproj -f net9.0-windows10.0.19041.0 -c Release -p:WindowsPackageType=None -p:PublishReadyToRun=true --self-contained true
+    if ($RequestedVersion) {
+        $version = $RequestedVersion.TrimStart("v")
+    }
+    else {
+        [xml]$projectXml = Get-Content -Path $ProjectFile
+        $version = $projectXml.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
+        if (-not $version) {
+            throw "No se pudo determinar ApplicationDisplayVersion desde $ProjectFile."
+        }
+    }
 
-if ($LASTEXITCODE -ne 0) { Write-Error "Falló la publicación."; exit }
+    $parts = $version.Split(".", [System.StringSplitOptions]::RemoveEmptyEntries)
+    if ($parts.Count -lt 2 -or $parts.Count -gt 3) {
+        throw "La versión '$version' no es válida para MSI. Usa formato major.minor o major.minor.patch."
+    }
 
-# 2. Crear carpeta de salida del instalador
-if (!(Test-Path $installerOut)) { New-Item -ItemType Directory -Path $installerOut }
+    if ($parts.Count -eq 2) {
+        $parts += "0"
+    }
 
-# 3. Recolectar archivos (Harvesting) usando WiX v4
-# Nota: WiX v4 utiliza 'wix build' directamente o 'wix harvest' para generar .wxs de archivos
-Write-Host "🔍 Recolectando archivos para el instalador..." -ForegroundColor Yellow
-# Generamos un archivo .wxs temporal con todos los binarios
-wix extension add WixToolset.UI.wixext # Por si acaso se usa UI en el futuro
-wix extension add WixToolset.Util.wixext
+    foreach ($part in $parts) {
+        if ($part -notmatch '^\d+$') {
+            throw "La versión '$version' contiene segmentos no numéricos."
+        }
+    }
 
-# Este comando 'harvest' es conceptual, en WiX 4 depende de las extensiones instaladas.
-# Si no tienes el harvest tool, este paso puede fallar y requerir ajuste manual.
-# Alternativa: Usar Heat.exe de WiX 3 o herramientas de WiX 4 específicas.
-# Por simplicidad, asumimos que el usuario tiene 'wix' configurado.
-
-wix build Package.wxs -b $publishDir -o "$installerOut\$projectName.msi"
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ ¡Éxito! El instalador se encuentra en: $installerOut\$projectName.msi" -ForegroundColor Green
-} else {
-    Write-Host "❌ Error al compilar el MSI." -ForegroundColor Red
+    return ($parts -join ".")
 }
+
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = Resolve-Path (Join-Path $scriptRoot "..")
+$resolvedProjectPath = Resolve-Path (Join-Path $scriptRoot $ProjectPath)
+$projectName = [System.IO.Path]::GetFileNameWithoutExtension($resolvedProjectPath)
+
+if (-not $PublishDir) {
+    $PublishDir = Join-Path $repoRoot "artifacts\publish"
+}
+if (-not $OutputPath) {
+    $OutputPath = Join-Path $repoRoot "artifacts\LocalBackupMaster.msi"
+}
+
+$PublishDir = [System.IO.Path]::GetFullPath($PublishDir)
+$OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
+$outputDirectory = Split-Path -Parent $OutputPath
+$intermediateDirectory = Join-Path $repoRoot "artifacts\wix"
+$resolvedProductVersion = Get-NormalizedProductVersion -ProjectFile $resolvedProjectPath -RequestedVersion $ProductVersion
+$mainExecutable = Join-Path $PublishDir "$projectName.exe"
+
+New-Item -ItemType Directory -Force -Path $PublishDir | Out-Null
+New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
+New-Item -ItemType Directory -Force -Path $intermediateDirectory | Out-Null
+
+if (-not (Test-Path $mainExecutable)) {
+    Write-Host "Publicando aplicación Windows en $PublishDir" -ForegroundColor Yellow
+    dotnet publish $resolvedProjectPath `
+        -f $Framework `
+        -c $Configuration `
+        -p:RuntimeIdentifier=$RuntimeIdentifier `
+        -p:WindowsPackageType=None `
+        -p:SelfContained=true `
+        -p:PublishSingleFile=false `
+        --output $PublishDir
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Falló la publicación de la aplicación."
+    }
+}
+
+if (-not (Test-Path $mainExecutable)) {
+    throw "No se encontró $mainExecutable. La carpeta publish no es válida para construir el MSI."
+}
+
+Write-Host "Construyendo MSI $OutputPath con versión $resolvedProductVersion" -ForegroundColor Yellow
+wix build (Join-Path $scriptRoot "Package.wxs") `
+    -arch x64 `
+    -bindpath "PublishDir=$PublishDir" `
+    -define "ProductVersion=$resolvedProductVersion" `
+    -intermediateFolder $intermediateDirectory `
+    -o $OutputPath
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Falló la compilación del MSI."
+}
+
+Write-Host "MSI generado en $OutputPath" -ForegroundColor Green

@@ -23,6 +23,29 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
 
+      - name: Resolve MSI version
+        id: version
+        shell: pwsh
+        run: |
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            $version = '${{ github.ref_name }}'.TrimStart('v')
+          }
+          else {
+            [xml]$projectXml = Get-Content -Path ./LocalBackupMaster.csproj
+            $version = $projectXml.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
+          }
+
+          $parts = $version.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)
+          if ($parts.Count -eq 2) {
+            $version = "$version.0"
+          }
+
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "La versión '$version' no es válida para MSI. Usa un tag como v1.2.3 o ajusta ApplicationDisplayVersion."
+          }
+
+          "value=$version" >> $env:GITHUB_OUTPUT
+
       - name: Restore dependencies
         run: dotnet restore LocalBackupMaster.csproj
 
@@ -37,12 +60,12 @@ jobs:
           dotnet publish LocalBackupMaster.csproj `
             -f net9.0-windows10.0.19041.0 `
             -c Release `
-            -p:RuntimeIdentifier=win-x64 `
+            -p:RuntimeIdentifier=win10-x64 `
             -p:WindowsPackageType=None `
             -p:SelfContained=true `
             -p:PublishSingleFile=false `
             -p:UseMonoRuntime=false `
-            --output ./publish
+            --output ./artifacts/publish
 
       - name: Install WiX Toolset
         run: dotnet tool install --global wix --version 5.0.2
@@ -50,18 +73,22 @@ jobs:
       - name: Build MSI Installer
         shell: pwsh
         run: |
-          # 1. Instalar extensiones compatibles con WiX v5
-          wix extension add -g WixToolset.UI.wixext/5.0.2
-          wix extension add -g WixToolset.Util.wixext/5.0.2
-          
-          # 2. Compilar (Nota: El harvesting manual se añadirá si es necesario, 
-          # por ahora Package.wxs usa una estructura simplificada)
-          cd Installer
-          wix build Package.wxs -b ../publish -o ../LocalBackupMaster.msi
+          # Ensure the dotnet global tools folder is on PATH for this step
+          $dotnetTools = "$env:USERPROFILE\.dotnet\tools"
+          if (-not (Test-Path $dotnetTools)) { Write-Host "Warning: $dotnetTools not found, continuing anyway" }
+          else { $env:PATH = "$dotnetTools;$env:PATH" }
+
+          # Verify wix tool is available
+          wix --version
+
+          ./Installer/build-msi.ps1 `
+            -PublishDir ./artifacts/publish `
+            -OutputPath ./artifacts/LocalBackupMaster.msi `
+            -ProductVersion '${{ steps.version.outputs.value }}'
 
       - name: Zip Release
         shell: pwsh
-        run: Compress-Archive -Path ./publish/* -DestinationPath ./LocalBackupMaster-Windows-x64.zip
+        run: Compress-Archive -Path ./artifacts/publish/* -DestinationPath ./LocalBackupMaster-Windows-x64.zip
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -69,7 +96,7 @@ jobs:
         with:
           files: |
             LocalBackupMaster-Windows-x64.zip
-            LocalBackupMaster.msi
+            artifacts/LocalBackupMaster.msi
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

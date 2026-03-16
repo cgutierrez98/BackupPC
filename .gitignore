@@ -30,3 +30,4 @@ manual.md
 # OS generated files
 .DS_Store
 Thumbs.db
+artifacts/LocalBackupMaster.msi
