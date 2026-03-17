@@ -1,10 +1,9 @@
-name: Release Windows EXE
+name: Build & Release Windows
 
 on:
   push:
     tags:
       - 'v*'
-      - '[0-9]*'
   workflow_dispatch:
 
 jobs:
@@ -21,93 +20,39 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Install MAUI workload
-        shell: pwsh
         run: dotnet workload install maui
 
-      - name: Resolve MSI version
+      - name: Resolve Version
         id: version
         shell: pwsh
         run: |
-          if ('${{ github.ref_type }}' -eq 'tag') {
-            $version = '${{ github.ref_name }}'.TrimStart('v')
-          }
-          else {
-            [xml]$projectXml = Get-Content -Path ./LocalBackupMaster.csproj
-            $version = $projectXml.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
-          }
-
-          $parts = $version.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)
-          if ($parts.Count -eq 2) {
-            $version = "$version.0"
-          }
+          $version = "${{ github.ref_name }}".TrimStart('v')
 
           if ($version -notmatch '^\d+\.\d+\.\d+$') {
-            throw "La versión '$version' no es válida para MSI. Usa un tag como v1.2.3 o ajusta ApplicationDisplayVersion."
+            throw "Usa tags tipo v1.2.3"
           }
 
           "value=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Restore dependencies (Windows TFM)
-        shell: pwsh
-        run: dotnet restore ./LocalBackupMaster.csproj --framework net9.0-windows10.0.19041.0
+      - name: Restore
+        run: dotnet restore ./LocalBackupMaster.csproj
 
-      - name: Restore tests (Windows TFM)
-        shell: pwsh
-        run: dotnet restore ./LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj --framework net9.0-windows10.0.19041.0
+      - name: Restore Tests
+        run: dotnet restore ./LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj
 
-      - name: Run tests
-        run: dotnet test LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj --configuration Release --no-restore
+      - name: Run Tests
+        run: |
+          dotnet test LocalBackupMaster.Tests/LocalBackupMaster.Tests.csproj `
+            --configuration Release `
+            --framework net9.0-windows10.0.19041.0 `
+            --no-restore
 
-      - name: Publish Windows App
+      - name: Publish App
         shell: pwsh
         run: |
           dotnet publish LocalBackupMaster.csproj `
-            name: Build MSI on tag
-
-            on:
-              push:
-                tags:
-                  - 'v*'
-
-            jobs:
-              build-msi:
-                name: Build MSI
-                runs-on: windows-latest
-                steps:
-                  - name: Checkout
-                    uses: actions/checkout@v4
-
-                  - name: Setup .NET
-                    uses: actions/setup-dotnet@v3
-                    with:
-                      dotnet-version: '9.0.x'
-
-                  - name: Install WiX Toolset
-                    shell: pwsh
-                    run: |
-                      choco install wix -y
-
-                  - name: Restore NuGet packages
-                    run: dotnet restore
-
-                  - name: Build solution
-                    run: dotnet build -c Release --no-restore
-
-                  - name: Build MSI
-                    shell: pwsh
-                    run: |
-                      $version = "${{ github.ref_name }}"
-                      Write-Host "Building MSI for tag: $version"
-                      ./Installer/build-msi.ps1 -ProductVersion $version
-
-                  - name: Upload MSI artifact
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: LocalBackupMaster-msi
-                      path: artifacts/*.msi
-
             -c Release `
-            -p:TargetFramework=net9.0-windows10.0.19041.0 `
+            -f net9.0-windows10.0.19041.0 `
             -r win-x64 `
             -p:WindowsPackageType=None `
             -p:SelfContained=true `
@@ -115,38 +60,35 @@ jobs:
             -p:UseMonoRuntime=false `
             --output ./artifacts/publish
 
-      - name: Install WiX Toolset
-        shell: pwsh
+      - name: Install WiX Toolset (v5)
         run: dotnet tool install --global wix --version 5.0.2
 
-      - name: Upload publish artifacts (for debugging)
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-publish
-          path: |
-            artifacts/publish/**
-            LocalBackupMaster-Windows-x64.zip
-            artifacts/LocalBackupMaster.msi
-
-      - name: Build MSI Installer
+      - name: Add .NET tools to PATH
         shell: pwsh
         run: |
-          # Ensure the dotnet global tools folder is on PATH for this step
-          $dotnetTools = "$env:USERPROFILE\.dotnet\tools"
-          if (-not (Test-Path $dotnetTools)) { Write-Host "Warning: $dotnetTools not found, continuing anyway" }
-          else { $env:PATH = "$dotnetTools;$env:PATH" }
+          $env:PATH="$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          echo $env:PATH
 
-          # Verify wix tool is available
+      - name: Build MSI
+        shell: pwsh
+        run: |
           wix --version
 
           ./Installer/build-msi.ps1 `
             -PublishDir ./artifacts/publish `
             -OutputPath ./artifacts/LocalBackupMaster.msi `
-            -ProductVersion '${{ steps.version.outputs.value }}'
+            -ProductVersion "${{ steps.version.outputs.value }}"
 
-      - name: Zip Release
-        shell: pwsh
-        run: Compress-Archive -Path ./artifacts/publish/* -DestinationPath ./LocalBackupMaster-Windows-x64.zip
+      - name: Zip App
+        run: Compress-Archive `
+          -Path ./artifacts/publish/* `
+          -DestinationPath ./LocalBackupMaster-Windows-x64.zip
+
+      - name: Upload Artifacts (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: artifacts/**
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
