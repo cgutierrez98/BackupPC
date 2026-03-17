@@ -62,7 +62,50 @@ jobs:
         shell: pwsh
         run: |
           dotnet publish LocalBackupMaster.csproj `
-            -f net9.0-windows10.0.19041.0 `
+            name: Build MSI on tag
+
+            on:
+              push:
+                tags:
+                  - 'v*'
+
+            jobs:
+              build-msi:
+                name: Build MSI
+                runs-on: windows-latest
+                steps:
+                  - name: Checkout
+                    uses: actions/checkout@v4
+
+                  - name: Setup .NET
+                    uses: actions/setup-dotnet@v3
+                    with:
+                      dotnet-version: '9.0.x'
+
+                  - name: Install WiX Toolset
+                    shell: pwsh
+                    run: |
+                      choco install wix -y
+
+                  - name: Restore NuGet packages
+                    run: dotnet restore
+
+                  - name: Build solution
+                    run: dotnet build -c Release --no-restore
+
+                  - name: Build MSI
+                    shell: pwsh
+                    run: |
+                      $version = "${{ github.ref_name }}"
+                      Write-Host "Building MSI for tag: $version"
+                      ./Installer/build-msi.ps1 -ProductVersion $version
+
+                  - name: Upload MSI artifact
+                    uses: actions/upload-artifact@v4
+                    with:
+                      name: LocalBackupMaster-msi
+                      path: artifacts/*.msi
+
             -c Release `
             -p:TargetFramework=net9.0-windows10.0.19041.0 `
             -r win-x64 `
