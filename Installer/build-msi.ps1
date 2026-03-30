@@ -90,13 +90,7 @@ function EmitDir($parent) {
   return ,$out
 }
 
-# build XML parts
-$xmlLines = @()
- $xmlLines += '<Fragment>'
-$xmlLines += '    <DirectoryRef Id="INSTALLFOLDER">'
-$xmlLines += (EmitDir 'INSTALLFOLDER')
-
-# components
+# collect components BEFORE EmitDir so $dirContent is populated
 $dirContent = @{}
 $compRefs = @()
 $compIndex = 0
@@ -109,15 +103,13 @@ foreach ($f in $files) {
   $guid = [guid]::NewGuid().ToString()
   $fileId = "fil_$compIndex"
   $src = $f.FullName
-  # build component xml
   $compDef = @()
-  $compDef += '        <Component Id="' + $compId + '" Guid="' + $guid + '">' 
+  $compDef += '        <Component Id="' + $compId + '" Guid="' + $guid + '">'
   $compDef += '          <File Id="' + $fileId + '" Source="' + $src + '" KeyPath="yes" />'
   $compDef += '        </Component>'
-  # determine target directory id (default INSTALLFOLDER)
   $targetDirId = 'INSTALLFOLDER'
   if ($relDir -and $relDir -ne '.') {
-    if ($dirNodes.ContainsKey($relDir)) { $targetDirId = $dirNodes[$relDir].Id } 
+    if ($dirNodes.ContainsKey($relDir)) { $targetDirId = $dirNodes[$relDir].Id }
     else {
       $alt = $relDir -replace '/','\\'
       if ($dirNodes.ContainsKey($alt)) { $targetDirId = $dirNodes[$alt].Id }
@@ -126,7 +118,6 @@ foreach ($f in $files) {
   }
   if (-not $dirContent.ContainsKey($targetDirId)) { $dirContent[$targetDirId] = @() }
   $dirContent[$targetDirId] += $compDef
-  # add component ref for component group
   $compRefs += '      <ComponentRef Id="' + $compId + '" />'
   if (-not $mainExe -and $f.Extension -eq '.exe') { $mainExe = @{ Rel=$rel; FileId=$fileId } }
 }
@@ -136,7 +127,7 @@ if ($mainExe) {
   $scId = 'cmp_Shortcuts'
   $scGuid = [guid]::NewGuid().ToString()
   $scDef = @()
-  $scDef += '        <Component Id="' + $scId + '" Guid="' + $scGuid + '">' 
+  $scDef += '        <Component Id="' + $scId + '" Guid="' + $scGuid + '">'
   $scDef += '          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="' + $productName + '" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]' + $exeName + '" />'
   $scDef += '          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="' + $productName + '" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]' + $exeName + '" />'
   $scDef += '          <RemoveFolder Id="RemoveProgramMenu" Directory="ProgramMenuFolder" On="uninstall" />'
@@ -147,6 +138,11 @@ if ($mainExe) {
   $compRefs += '      <ComponentRef Id="' + $scId + '" />'
 }
 
+# build XML — now EmitDir can use $dirContent
+$xmlLines = @()
+$xmlLines += '<Fragment>'
+$xmlLines += '    <DirectoryRef Id="INSTALLFOLDER">'
+$xmlLines += (EmitDir 'INSTALLFOLDER')
 $xmlLines += '    </DirectoryRef>'
 $xmlLines += '    <ComponentGroup Id="ProductComponents">'
 $xmlLines += $compRefs
@@ -164,9 +160,9 @@ $templ = $templ -replace '__PRODUCT_NAME__', $productName
 $templ = $templ -replace '__UPGRADE_CODE__', $upgradeCode
 # remove any include directive
 $templ = $templ -replace '<\?include GeneratedComponents.wxs\?>',''
-# insert our fragment immediately before the <Product ...> element
+# insert our fragment immediately before the <Package ...> element (WiX v4/v5)
 $frag = ($xmlLines -join "`n").Trim()
-$templ = [regex]::Replace($templ, '(<Product\b)', { param($m) return $frag + "`n" + $m.Groups[1].Value })
+$templ = [regex]::Replace($templ, '(<Package\b)', { param($m) return $frag + "`n" + $m.Groups[1].Value })
 $templ | Out-File -FilePath $productWxs -Encoding utf8
 Write-Host "Wrote: $productWxs"
 

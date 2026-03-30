@@ -1,38 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?include GeneratedComponents.wxs?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Product Id="*" Name="__PRODUCT_NAME__" Language="1033" Version="__PRODUCT_VERSION__" Manufacturer="YourCompany" UpgradeCode="__UPGRADE_CODE__">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+  <Package Name="__PRODUCT_NAME__" Language="1033" Version="__PRODUCT_VERSION__" Manufacturer="LocalBackupMaster" UpgradeCode="__UPGRADE_CODE__" InstallerVersion="500" Compressed="yes" Scope="perMachine">
 
     <MajorUpgrade AllowDowngrades="no" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
     <MediaTemplate />
 
-    <!-- UI -->
-    <UI>
-      <UIRef Id="WixUI_InstallDir" />
-    </UI>
-
-    <!-- Advertising resources (icon, banner) -->
-    <Property Id="ARPCONTACT" Value="" />
-    <Property Id="ARPPRODUCTICON" Value="app.ico" />
-
-    <Binary Id="BannerBmp" SourceFile="app-banner.bmp" />
-    <Binary Id="DialogBmp" SourceFile="app-dialog.bmp" />
-    <Icon Id="AppIcon" SourceFile="app.ico" />
-
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="__PRODUCT_NAME__" />
-      </Directory>
-      <Directory Id="ProgramMenuFolder" />
-      <Directory Id="DesktopFolder" />
-    </Directory>
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="INSTALLFOLDER" Name="__PRODUCT_NAME__" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
 
     <!-- Feature tree -->
     <Feature Id="ProductFeature" Title="__PRODUCT_NAME__" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
 
-  </Product>
+  </Package>
 </Wix>

@@ -61,13 +61,10 @@ jobs:
             --output ./artifacts/publish
 
       - name: Install WiX Toolset (v5)
-        run: dotnet tool install --global wix --version 5.0.2
-
-      - name: Add .NET tools to PATH
-        shell: pwsh
         run: |
-          $env:PATH="$env:USERPROFILE\.dotnet\tools;$env:PATH"
-          echo $env:PATH
+          dotnet tool install --global wix --version 5.0.2
+          echo "$env:USERPROFILE\.dotnet\tools" | Out-File -Append -FilePath $env:GITHUB_PATH
+        shell: pwsh
 
       - name: Build MSI
         shell: pwsh
@@ -76,7 +73,7 @@ jobs:
 
           ./Installer/build-msi.ps1 `
             -PublishDir ./artifacts/publish `
-            -OutputPath ./artifacts/LocalBackupMaster.msi `
+            -OutputPath ./artifacts `
             -ProductVersion "${{ steps.version.outputs.value }}"
 
       - name: Zip App
@@ -96,7 +93,7 @@ jobs:
         with:
           files: |
             LocalBackupMaster-Windows-x64.zip
-            artifacts/LocalBackupMaster.msi
+            artifacts/LocalBackupMaster-*.msi
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
