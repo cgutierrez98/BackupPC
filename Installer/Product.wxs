@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?include GeneratedComponents.wxs?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="__PRODUCT_NAME__" Language="1033" Version="__PRODUCT_VERSION__" Manufacturer="LocalBackupMaster" UpgradeCode="__UPGRADE_CODE__" InstallerVersion="500" Compressed="yes" Scope="perMachine">
+  <Package Name="Local Backup Master"
+           Language="1033"
+           Version="__PRODUCT_VERSION__"
+           Manufacturer="CGutierrez"
+           UpgradeCode="__UPGRADE_CODE__"
+           InstallerVersion="500"
+           Compressed="yes"
+           Scope="perMachine">
 
-    <MajorUpgrade AllowDowngrades="no" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <SummaryInformation Description="Local Backup Master - backup local incremental" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Launch Condition="VersionNT64" Message="Local Backup Master requires 64-bit Windows." />
 
-    <MediaTemplate EmbedCab="yes" />
-
-    <StandardDirectory Id="ProgramFilesFolder">
-      <Directory Id="INSTALLFOLDER" Name="__PRODUCT_NAME__" />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="LocalBackupMaster" />
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
     <StandardDirectory Id="DesktopFolder" />
 
-    <!-- Feature tree -->
-    <Feature Id="ProductFeature" Title="__PRODUCT_NAME__" Level="1">
+    <Feature Id="ProductFeature" Title="Local Backup Master" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
 

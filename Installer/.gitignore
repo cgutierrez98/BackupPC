@@ -3,3 +3,6 @@ obj/
 bin/
 *.msi
 *.wixpdb
+*.cab
+Product.Generated.wxs
+GeneratedComponents.wxs

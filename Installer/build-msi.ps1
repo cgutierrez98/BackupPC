@@ -18,7 +18,20 @@ $pv = $ProductVersion -replace '^v',''
 if (-not $pv) { Fail 'ProductVersion empty' }
 
 $productName = 'LocalBackupMaster'
-$upgradeCode = 'E1B3C8D0-5F1A-4D2E-9A3B-7C9D8E6F5A1B'
+$upgradeCode = '4f5e6d7c-8b9a-0a1b-2c3d-4e5f6a7b8c9d'
+
+# Deterministic GUID from relative path (stable across builds for MSI upgrades)
+function DeterministicGuid([string]$seed) {
+  $bytes = [System.Text.Encoding]::UTF8.GetBytes($upgradeCode + '/' + $seed)
+  $hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+  return [guid]::new(
+    [BitConverter]::ToInt32($hash, 0),
+    [BitConverter]::ToInt16($hash, 4),
+    [BitConverter]::ToInt16($hash, 6),
+    $hash[8], $hash[9], $hash[10], $hash[11],
+    $hash[12], $hash[13], $hash[14], $hash[15]
+  ).ToString()
+}
 
 Write-Host "Building MSI for $productName v$pv"
 
@@ -98,7 +111,7 @@ foreach ($f in $files) {
   $relDir = Split-Path $rel -Parent
   $compIndex++
   $compId = "cmp_$compIndex"
-  $guid = [guid]::NewGuid().ToString()
+  $guid = DeterministicGuid $rel
   $fileId = "fil_$compIndex"
   $src = $f.FullName
   $compDef = @()
@@ -120,7 +133,7 @@ foreach ($f in $files) {
 if ($mainExe) {
   $exeName = Split-Path $mainExe.Rel -Leaf
   $scId = 'cmp_Shortcuts'
-  $scGuid = [guid]::NewGuid().ToString()
+  $scGuid = DeterministicGuid '__shortcuts__'
   $scDef = @()
   $scDef += '        <Component Id="' + $scId + '" Guid="' + $scGuid + '">'
   $scDef += '          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="' + $productName + '" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]' + $exeName + '" />'
@@ -162,7 +175,6 @@ Write-Host "Wrote: $generatedComponents"
 # Prepare product file: inline generated fragment directly into product (avoid include complexity)
 $templ = Get-Content -Raw -Path $templateProduct
 $templ = $templ -replace '__PRODUCT_VERSION__', $pv
-$templ = $templ -replace '__PRODUCT_NAME__', $productName
 $templ = $templ -replace '__UPGRADE_CODE__', $upgradeCode
 # remove any include directive
 $templ = $templ -replace '<\?include GeneratedComponents.wxs\?>',''
