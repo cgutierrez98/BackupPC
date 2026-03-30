@@ -75,22 +75,20 @@ foreach ($f in $files) {
   }
 }
 
-# helper: emit directories recursively (will include components inside directories)
-function EmitDir($parent) {
+# helper: emit directory tree (structure only, no components)
+function EmitDirTree($parent) {
   $out = @()
   $children = $dirNodes.GetEnumerator() | Where-Object { $_.Value.Parent -eq $parent } | Sort-Object { $_.Key }
   foreach ($c in $children) {
     $id = $c.Value.Id; $name = $c.Value.Name
-    $out += '      <Directory Id="' + $id + '" Name="' + $name + '">' 
-    # include any components for this directory
-    if ($dirContent.ContainsKey($id)) { $out += $dirContent[$id] }
-    $out += EmitDir $id
+    $out += '      <Directory Id="' + $id + '" Name="' + $name + '">'
+    $out += EmitDirTree $id
     $out += '      </Directory>'
   }
   return ,$out
 }
 
-# collect components BEFORE EmitDir so $dirContent is populated
+# collect components BEFORE building XML
 $dirContent = @{}
 $compRefs = @()
 $compIndex = 0
@@ -109,12 +107,9 @@ foreach ($f in $files) {
   $compDef += '        </Component>'
   $targetDirId = 'INSTALLFOLDER'
   if ($relDir -and $relDir -ne '.') {
-    if ($dirNodes.ContainsKey($relDir)) { $targetDirId = $dirNodes[$relDir].Id }
-    else {
-      $alt = $relDir -replace '/','\\'
-      if ($dirNodes.ContainsKey($alt)) { $targetDirId = $dirNodes[$alt].Id }
-      else { Write-Warning "Directory mapping not found for '$relDir' — attaching to INSTALLFOLDER" }
-    }
+    $norm = $relDir -replace '/','\\'
+    if ($dirNodes.ContainsKey($norm)) { $targetDirId = $dirNodes[$norm].Id }
+    else { Write-Warning "Directory mapping not found for '$relDir' -- attaching to INSTALLFOLDER" }
   }
   if (-not $dirContent.ContainsKey($targetDirId)) { $dirContent[$targetDirId] = @() }
   $dirContent[$targetDirId] += $compDef
@@ -131,19 +126,30 @@ if ($mainExe) {
   $scDef += '          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="' + $productName + '" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]' + $exeName + '" />'
   $scDef += '          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="' + $productName + '" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]' + $exeName + '" />'
   $scDef += '          <RemoveFolder Id="RemoveProgramMenu" Directory="ProgramMenuFolder" On="uninstall" />'
-  $scDef += "          <RegistryValue Root=\"HKCU\" Key=\"Software\\$productName\" Name=\"installed\" Type=\"integer\" Value=\"1\" KeyPath=\"yes\" />"
+  $scDef += '          <RegistryValue Root="HKCU" Key="Software\' + $productName + '" Name="installed" Type="integer" Value="1" KeyPath="yes" />'
   $scDef += '        </Component>'
   if (-not $dirContent.ContainsKey('INSTALLFOLDER')) { $dirContent['INSTALLFOLDER'] = @() }
   $dirContent['INSTALLFOLDER'] += $scDef
   $compRefs += '      <ComponentRef Id="' + $scId + '" />'
 }
 
-# build XML — now EmitDir can use $dirContent
+# build XML fragment
 $xmlLines = @()
 $xmlLines += '<Fragment>'
+
+# 1) directory tree
 $xmlLines += '    <DirectoryRef Id="INSTALLFOLDER">'
-$xmlLines += (EmitDir 'INSTALLFOLDER')
+$xmlLines += (EmitDirTree 'INSTALLFOLDER')
 $xmlLines += '    </DirectoryRef>'
+
+# 2) components per directory via DirectoryRef
+foreach ($entry in $dirContent.GetEnumerator()) {
+  $xmlLines += '    <DirectoryRef Id="' + $entry.Key + '">'
+  $xmlLines += $entry.Value
+  $xmlLines += '    </DirectoryRef>'
+}
+
+# 3) component group
 $xmlLines += '    <ComponentGroup Id="ProductComponents">'
 $xmlLines += $compRefs
 $xmlLines += '    </ComponentGroup>'
