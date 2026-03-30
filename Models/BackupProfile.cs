@@ -23,14 +23,29 @@ public class BackupProfile
 
     // ── Helpers de deserialización ─────────────────────────────────────────
     public List<int> GetSourceIds()
-        => JsonSerializer.Deserialize<List<int>>(SourceIdsJson) ?? [];
+        => DeserializeIds(SourceIdsJson);
 
     public List<int> GetDestinationIds()
-        => JsonSerializer.Deserialize<List<int>>(DestinationIdsJson) ?? [];
+        => DeserializeIds(DestinationIdsJson);
 
     public void SetSourceIds(IEnumerable<int> ids)
         => SourceIdsJson = JsonSerializer.Serialize(ids);
 
     public void SetDestinationIds(IEnumerable<int> ids)
         => DestinationIdsJson = JsonSerializer.Serialize(ids);
+
+    private static List<int> DeserializeIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<int>>(json) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 }
