@@ -6,10 +6,10 @@
              x:Class="LocalBackupMaster.MainPage"
              x:DataType="vm:MainViewModel"
              Title="Local Backup Master"
-             BackgroundColor="{AppThemeBinding Light=#F0F2F5, Dark=#0A0A0A}">
+             BackgroundColor="{StaticResource PageBgLight}">
 
     <ScrollView>
-        <VerticalStackLayout Padding="30" Spacing="25" MaximumWidthRequest="1200" HorizontalOptions="Center">
+        <VerticalStackLayout Padding="30" Spacing="25" MaximumWidthRequest="1200" HorizontalOptions="Fill">
 
             <!-- Header -->
             <VerticalStackLayout HorizontalOptions="Center" Margin="0,0,0,10">
@@ -17,25 +17,23 @@
                        Text="Local Backup Master"
                        FontFamily="OpenSansSemibold"
                        FontSize="36"
-                       TextColor="{AppThemeBinding Light=#1D1D1F, Dark=#F5F5F7}"
+                       TextColor="#1D1D1F"
+                       HorizontalOptions="Center"/>
+                <Label Text="Copia de seguridad local incremental, sin nube."
+                       FontSize="16" TextColor="#6B7280"
                        HorizontalOptions="Center"
-                       Opacity="0" TranslationY="-20" />
-
-                  <Label Text="Copia de seguridad local incremental, sin nube."
-                      FontSize="16" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
-                       HorizontalOptions="Center"
-                       Opacity="0" x:Name="SubHeaderLabel"/>
+                       x:Name="SubHeaderLabel"/>
             </VerticalStackLayout>
 
             <!-- Dashboard Grid -->
-            <Grid ColumnDefinitions="*, 420" ColumnSpacing="25" RowDefinitions="Auto">
-                
+            <Grid ColumnDefinitions="*, 420" ColumnSpacing="25" RowDefinitions="Auto" HorizontalOptions="Fill">
+
                 <!-- ══════ COLUMNA IZQUIERDA: GESTIÓN DE DATOS ══════ -->
                 <VerticalStackLayout Grid.Column="0" Spacing="20">
-                    
+
                     <!-- Orígenes Card -->
-                    <Border x:Name="SourcesCard" Opacity="0" TranslationY="30"
-                            StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
+                    <Border x:Name="SourcesCard"
+                            StrokeThickness="0" BackgroundColor="{StaticResource SurfaceLight}"
                             Padding="22">
                         <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
                         <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="14" Opacity="0.07"/></Border.Shadow>
@@ -43,31 +41,34 @@
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
                                 <Label Text="📁  Carpetas de Origen" FontFamily="OpenSansSemibold" FontSize="17"
-                                       TextColor="{AppThemeBinding Light=#222, Dark=#EEE}" VerticalOptions="Center"/>
+                                       TextColor="{StaticResource CardTitleLight}" VerticalOptions="Center"/>
                                 <Button Grid.Column="1" Text="+ Añadir" FontSize="13" CornerRadius="8"
-                                    BackgroundColor="#0078D4" TextColor="White" HeightRequest="36"
-                                    Clicked="OnSelectSourceClicked" x:Name="SelectSourceBtn"
-                                    AutomationProperties.Name="Añadir carpeta de origen"
-                                    AutomationProperties.HelpText="Abre el diálogo para seleccionar una carpeta de origen."/>
+                                    BackgroundColor="{StaticResource AccentBlue}" TextColor="White" HeightRequest="36"
+                                    Clicked="OnSelectSourceClicked" x:Name="SelectSourceBtn"/>
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EBEBEB, Dark=#2E2E2E}"/>
+                            <BoxView HeightRequest="1" Color="{StaticResource DividerLight}"/>
 
                             <CollectionView x:Name="SourcesCollectionView" ItemsSource="{Binding SourceItems}"
-                                            SelectionMode="None" EmptyView="Sin carpetas de origen."
-                                            HeightRequest="200">
+                                            SelectionMode="None" MinimumHeightRequest="60" MaximumHeightRequest="220">
+                                <CollectionView.EmptyView>
+                                    <VerticalStackLayout HorizontalOptions="Center" Padding="0,16" Spacing="6">
+                                        <Label Text="📂" FontSize="28" HorizontalTextAlignment="Center"/>
+                                        <Label Text="Sin carpetas de origen" FontSize="13"
+                                               TextColor="{StaticResource SubtextLight}"
+                                               HorizontalTextAlignment="Center"/>
+                                    </VerticalStackLayout>
+                                </CollectionView.EmptyView>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="m:BackupSource">
                                         <Grid ColumnDefinitions="*, Auto" Padding="0,6">
                                             <Label Grid.Column="0" Text="{Binding Path}" FontSize="13"
-                                                   TextColor="{AppThemeBinding Light=#444, Dark=#BBB}"
+                                                   TextColor="{StaticResource BodyLight}"
                                                    LineBreakMode="TailTruncation" VerticalOptions="Center"/>
-                                                            <Button Grid.Column="1" Text="✕" FontSize="13" WidthRequest="44" HeightRequest="44"
-                                                                    CornerRadius="10" BackgroundColor="Transparent"
-                                                                    TextColor="Gray" 
-                                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveSourceCommand}"
-                                                                    CommandParameter="{Binding .}"
-                                                                    AutomationProperties.Name="Eliminar carpeta de origen"
-                                                                    AutomationProperties.HelpText="Elimina esta carpeta de la lista de orígenes."/>
+                                            <Button Grid.Column="1" Text="✕" FontSize="13" WidthRequest="44" HeightRequest="44"
+                                                    CornerRadius="10" BackgroundColor="Transparent"
+                                                    TextColor="Gray"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveSourceCommand}"
+                                                    CommandParameter="{Binding .}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -76,8 +77,8 @@
                     </Border>
 
                     <!-- Destinos Card -->
-                    <Border x:Name="DestsCard" Opacity="0" TranslationY="30"
-                            StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
+                    <Border x:Name="DestsCard"
+                            StrokeThickness="0" BackgroundColor="{StaticResource SurfaceLight}"
                             Padding="22">
                         <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
                         <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="14" Opacity="0.07"/></Border.Shadow>
@@ -85,36 +86,39 @@
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
                                 <Label Text="💾  Destinos de Backup" FontFamily="OpenSansSemibold" FontSize="17"
-                                       TextColor="{AppThemeBinding Light=#222, Dark=#EEE}" VerticalOptions="Center"/>
+                                       TextColor="{StaticResource CardTitleLight}" VerticalOptions="Center"/>
                                 <Button Grid.Column="1" Text="+ Añadir" FontSize="13" CornerRadius="8"
-                                    BackgroundColor="#0078D4" TextColor="White" HeightRequest="36"
-                                    Clicked="OnSelectDestinationClicked" x:Name="SelectDestinationBtn"
-                                    AutomationProperties.Name="Añadir destino de backup"
-                                    AutomationProperties.HelpText="Abre el diálogo para seleccionar un destino de backup."/>
+                                    BackgroundColor="{StaticResource AccentBlue}" TextColor="White" HeightRequest="36"
+                                    Clicked="OnSelectDestinationClicked" x:Name="SelectDestinationBtn"/>
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EBEBEB, Dark=#2E2E2E}"/>
+                            <BoxView HeightRequest="1" Color="#EBEBEB"/>
 
                             <CollectionView x:Name="DestsCollectionView" ItemsSource="{Binding DestinationItems}"
-                                            SelectionMode="None" EmptyView="Sin destinos registrados."
-                                            HeightRequest="150">
+                                            SelectionMode="None" MinimumHeightRequest="50" MaximumHeightRequest="160">
+                                <CollectionView.EmptyView>
+                                    <VerticalStackLayout HorizontalOptions="Center" Padding="0,12" Spacing="6">
+                                        <Label Text="💽" FontSize="24" HorizontalTextAlignment="Center"/>
+                                        <Label Text="Sin destinos registrados" FontSize="13"
+                                               TextColor="{StaticResource SubtextLight}"
+                                               HorizontalTextAlignment="Center"/>
+                                    </VerticalStackLayout>
+                                </CollectionView.EmptyView>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="m:BackupDestination">
                                         <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10" Padding="0,6">
                                             <Label Grid.Column="0" Text="💽" FontSize="18" VerticalOptions="Center"/>
                                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
                                                 <Label Text="{Binding BackupPath}" FontSize="13"
-                                                       TextColor="{AppThemeBinding Light=#444, Dark=#BBB}"
-                                                       LineBreakMode="TailTruncation"/>
-                                                      <Label Text="{Binding Uuid}" FontSize="10" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                                                   TextColor="{StaticResource BodyLight}"
+                                                   LineBreakMode="TailTruncation"/>
+                                                <Label Text="{Binding Uuid}" FontSize="10" TextColor="{StaticResource SubtextLight}"
                                                        LineBreakMode="TailTruncation"/>
                                             </VerticalStackLayout>
-                                                     <Button Grid.Column="2" Text="✕" FontSize="13" WidthRequest="44" HeightRequest="44"
-                                                         CornerRadius="10" BackgroundColor="Transparent"
-                                                         TextColor="Gray" 
-                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveDestinationCommand}"
-                                                         CommandParameter="{Binding .}"
-                                                         AutomationProperties.Name="Eliminar destino de backup"
-                                                         AutomationProperties.HelpText="Elimina este destino de la lista."/>
+                                            <Button Grid.Column="2" Text="✕" FontSize="13" WidthRequest="44" HeightRequest="44"
+                                                    CornerRadius="10" BackgroundColor="Transparent"
+                                                    TextColor="Gray"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=RemoveDestinationCommand}"
+                                                    CommandParameter="{Binding .}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -125,21 +129,76 @@
 
                 <!-- ══════ COLUMNA DERECHA: CONTROL Y ESTADO ══════ -->
                 <VerticalStackLayout Grid.Column="1" Spacing="20">
-                    
-                    <!-- Acciones Card -->
-                    <Border x:Name="ConfigCard" Opacity="0" TranslationY="30"
-                            StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
+
+                    <!-- Perfiles Card (C1) -->
+                    <Border StrokeThickness="0" BackgroundColor="{StaticResource SurfaceLight}"
+                            Padding="22">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
+                        <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="14" Opacity="0.07"/></Border.Shadow>
+
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="🗂  Perfiles" FontFamily="OpenSansSemibold" FontSize="17"
+                                   TextColor="{StaticResource CardTitleLight}"/>
+
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                <Entry Grid.Column="0"
+                                       Text="{Binding NewProfileName}"
+                                       Placeholder="Nombre del perfil..."
+                                       FontSize="13"
+                                       BackgroundColor="#F8F9FA"/>
+                                <Button Grid.Column="1" Text="💾 Guardar"
+                                        Command="{Binding SaveProfileCommand}"
+                                        FontSize="12" CornerRadius="8"
+                                        BackgroundColor="{StaticResource AccentBlue}" TextColor="White" HeightRequest="40"/>
+                            </Grid>
+
+                            <CollectionView ItemsSource="{Binding Profiles}" SelectionMode="None"
+                                            MaximumHeightRequest="120">
+                                <CollectionView.EmptyView>
+                                    <Label Text="Sin perfiles guardados" FontSize="12" Opacity="0.5"
+                                           TextColor="{StaticResource SubtextLight}"
+                                           HorizontalTextAlignment="Center" Padding="0,8"/>
+                                </CollectionView.EmptyView>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="m:BackupProfile">
+                                        <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="6" Padding="0,4">
+                                            <Label Grid.Column="0" Text="{Binding Name}" FontSize="13" VerticalOptions="Center"
+                                                   TextColor="{StaticResource BodyLight}"/>
+                                            <Button Grid.Column="1" Text="Cargar" FontSize="11" HeightRequest="32"
+                                                    CornerRadius="6" Padding="8,0"
+                                                    BackgroundColor="#E1E4E8" TextColor="#24292E"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=LoadProfileCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                            <Button Grid.Column="2" Text="✕" FontSize="11" HeightRequest="32" WidthRequest="32"
+                                                    CornerRadius="6" BackgroundColor="Transparent" TextColor="Gray"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=DeleteProfileCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <Button Text="📋 Ver historial"
+                                    Command="{Binding NavigateToHistoryCommand}"
+                                    FontSize="13" CornerRadius="8" HeightRequest="38"
+                                    BackgroundColor="#E1E4E8" TextColor="#24292E"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Control de Backup Card -->
+                    <Border x:Name="ConfigCard"
+                            StrokeThickness="0" BackgroundColor="{StaticResource SurfaceLight}"
                             Padding="22">
                         <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
                         <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="14" Opacity="0.07"/></Border.Shadow>
 
                         <VerticalStackLayout Spacing="15">
                             <Label Text="⚡  Control de Backup" FontFamily="OpenSansSemibold" FontSize="17"
-                                   TextColor="{AppThemeBinding Light=#222, Dark=#EEE}"/>
-                            
+                                   TextColor="{StaticResource CardTitleLight}"/>
+
                             <!-- Filtro de Extensiones -->
                             <VerticalStackLayout Spacing="8">
-                                <Label Text="Filtrar Contenido" FontSize="13" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"/>
+                                <Label Text="Filtrar Contenido" FontSize="13" TextColor="{StaticResource SubtextLight}"/>
                                 <FlexLayout Wrap="Wrap" JustifyContent="Start">
                                     <FlexLayout.Resources>
                                         <Style TargetType="Button">
@@ -148,111 +207,145 @@
                                             <Setter Property="Margin" Value="0,0,8,8"/>
                                             <Setter Property="Padding" Value="12,0"/>
                                             <Setter Property="CornerRadius" Value="14"/>
-                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E1E4E8, Dark=#30363D}"/>
-                                            <Setter Property="TextColor" Value="{AppThemeBinding Light=#24292E, Dark=#C9D1D9}"/>
+                                            <Setter Property="BackgroundColor" Value="#E1E4E8"/>
+                                            <Setter Property="TextColor" Value="#24292E"/>
                                         </Style>
                                     </FlexLayout.Resources>
-                                    <Button Text="Todo" Command="{Binding ToggleFilterCommand}" CommandParameter="all" AutomationProperties.Name="Mostrar todo" AutomationProperties.HelpText="Muestra todos los tipos de archivo en el filtro.">
+                                    <Button Text="Todo" Command="{Binding ToggleFilterCommand}" CommandParameter="all">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsAllActive}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+                                                <Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="📷 Fotos" Command="{Binding ToggleFilterCommand}" CommandParameter="photos" AutomationProperties.Name="Filtrar fotos" AutomationProperties.HelpText="Filtra para copiar únicamente fotos.">
+                                    <Button Text="📷 Fotos" Command="{Binding ToggleFilterCommand}" CommandParameter="photos">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsPhotosActive}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+                                                <Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="Docs" Command="{Binding ToggleFilterCommand}" CommandParameter="docs" AutomationProperties.Name="Filtrar documentos" AutomationProperties.HelpText="Filtra para copiar únicamente documentos.">
+                                    <Button Text="Docs" Command="{Binding ToggleFilterCommand}" CommandParameter="docs">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsDocsActive}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+                                                <Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="🎥 Video" Command="{Binding ToggleFilterCommand}" CommandParameter="video" AutomationProperties.Name="Filtrar vídeos" AutomationProperties.HelpText="Filtra para copiar únicamente vídeos.">
+                                    <Button Text="🎥 Video" Command="{Binding ToggleFilterCommand}" CommandParameter="video">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsVideoActive}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+                                                <Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
-                                    <Button Text="🎵 Audio" Command="{Binding ToggleFilterCommand}" CommandParameter="audio" AutomationProperties.Name="Filtrar audio" AutomationProperties.HelpText="Filtra para copiar únicamente archivos de audio.">
+                                    <Button Text="🎵 Audio" Command="{Binding ToggleFilterCommand}" CommandParameter="audio">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding IsAudioActive}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="#0078D4"/><Setter Property="TextColor" Value="White"/>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+                                                <Setter Property="TextColor" Value="White"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>
                                 </FlexLayout>
-                                    <Entry Text="{Binding IncludeExtensions}" Placeholder="Filtros manuales..." FontSize="12" BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2C2C2E}"
-                                        AutomationProperties.Name="Filtros manuales" AutomationProperties.HelpText="Escriba extensiones o patrones separados por comas."/>
+                                <Entry Text="{Binding IncludeExtensions}" Placeholder="Filtros manuales..." FontSize="12" BackgroundColor="#F8F9FA"/>
                             </VerticalStackLayout>
 
                             <!-- Paralelismo -->
                             <VerticalStackLayout Spacing="4">
                                 <Grid ColumnDefinitions="*, Auto">
-                                    <Label Text="Hilos paralelos" FontSize="13" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" VerticalOptions="Center"/>
-                                    <Label Grid.Column="1" Text="{Binding ParallelDegree}" FontFamily="OpenSansSemibold" TextColor="#0078D4" FontSize="16"/>
+                                    <Label Text="Hilos paralelos" FontSize="13" TextColor="{StaticResource SubtextLight}" VerticalOptions="Center"/>
+                                    <Label Grid.Column="1" Text="{Binding ParallelDegree}" FontFamily="OpenSansSemibold" TextColor="{StaticResource AccentBlue}" FontSize="16"/>
                                 </Grid>
-                                <Slider Minimum="1" Maximum="8" Value="{Binding ParallelDegree}" MinimumTrackColor="#0078D4"/>
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="6">
+                                    <Label Grid.Column="0" Text="1" FontSize="11" TextColor="{StaticResource SubtextLight}" VerticalOptions="Center"/>
+                                    <Slider Grid.Column="1" Minimum="1" Maximum="8" Value="{Binding ParallelDegree}" MinimumTrackColor="{StaticResource AccentBlue}"/>
+                                    <Label Grid.Column="2" Text="8" FontSize="11" TextColor="{StaticResource SubtextLight}" VerticalOptions="Center"/>
+                                </Grid>
                             </VerticalStackLayout>
 
-                            <!-- Iniciar/Cancelar -->
-                                <Button Text="🚀 Iniciar Backup" Command="{Binding StartBackupCommand}" Clicked="OnStartBackupClicked"
-                                    CornerRadius="10" BackgroundColor="#0078D4" TextColor="White" HeightRequest="48" Margin="0,5,0,0"
-                                    AutomationProperties.Name="Iniciar backup" AutomationProperties.HelpText="Inicia el proceso de copia de seguridad."/>
-                            
-                                <Button Text="Cancelar" Command="{Binding CancelBackupCommand}" Clicked="OnCancelBackupClicked" 
-                                    IsVisible="{Binding CanCancel}" CornerRadius="10" BackgroundColor="#E81123" TextColor="White" HeightRequest="44"
-                                    AutomationProperties.Name="Cancelar backup" AutomationProperties.HelpText="Cancela el proceso en curso."/>
+                            <!-- A2 — Throttle -->
+                            <VerticalStackLayout Spacing="4">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Label Text="Throttle (KB/s)" FontSize="13" TextColor="{StaticResource SubtextLight}" VerticalOptions="Center"/>
+                                    <Label Grid.Column="1" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource AccentBlue}">
+                                        <Label.Text>
+                                            <Binding Path="DestinationItems[0].ThrottleKBps" FallbackValue="0" StringFormat="{}{0} KB/s"/>
+                                        </Label.Text>
+                                    </Label>
+                                </Grid>
+                                <Label Text="0 = sin límite" FontSize="10" Opacity="0.5" TextColor="{StaticResource SubtextLight}"/>
+                            </VerticalStackLayout>
+
+                            <!-- A3 — Filtro por fecha -->
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                                <CheckBox Grid.Column="0" IsChecked="{Binding UseSinceDate}" Color="{StaticResource AccentBlue}"/>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                    <Label Text="Solo archivos desde:" FontSize="13" TextColor="{StaticResource SubtextLight}"/>
+                                    <DatePicker Date="{Binding SinceDate}" IsEnabled="{Binding UseSinceDate}" FontSize="12"/>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- A1 — Dry-Run -->
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                                <CheckBox Grid.Column="0" IsChecked="{Binding IsDryRun}" Color="{StaticResource AccentBlue}"/>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="🔍 Modo Simulacro (Dry-Run)" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource BodyLight}"/>
+                                    <Label Text="Analiza qué se copiaría, sin copiar nada." FontSize="11" Opacity="0.6" TextColor="{StaticResource SubtextLight}"/>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- Botones Iniciar/Cancelar -->
+                            <Button Text="🚀 Iniciar Backup" Command="{Binding StartBackupCommand}" Clicked="OnStartBackupClicked"
+                                    IsEnabled="{Binding CanStartBackup}"
+                                    CornerRadius="10" BackgroundColor="{StaticResource AccentBlue}" TextColor="White" HeightRequest="48" Margin="0,5,0,0"/>
+                            <Button Text="Cancelar" Command="{Binding CancelBackupCommand}" Clicked="OnCancelBackupClicked"
+                                    IsVisible="{Binding CanCancel}" CornerRadius="10" BackgroundColor="{StaticResource ErrorRed}" TextColor="White" HeightRequest="44"/>
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Progreso Card -->
-                    <Border x:Name="ProgressCard" IsVisible="{Binding IsBusy}" Opacity="0" Scale="0.95"
-                            StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1E}"
+                    <Border x:Name="ProgressCard" IsVisible="False" Opacity="0" Scale="0.95"
+                            StrokeThickness="0" BackgroundColor="{StaticResource SurfaceLight}"
                             Padding="22">
                         <Border.StrokeShape><RoundRectangle CornerRadius="16"/></Border.StrokeShape>
                         <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="20" Opacity="0.1"/></Border.Shadow>
 
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
-                                <ProgressBar Progress="{Binding GlobalProgress}" ProgressColor="#0078D4" HeightRequest="8" VerticalOptions="Center"
-                                             AutomationProperties.Name="Progreso global" AutomationProperties.HelpText="Barra que indica progreso de la copia."/>
-                                <Label Grid.Column="1" Text="{Binding PercentageText}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="#0078D4" Margin="10,0,0,0"/>
+                                <ProgressBar Progress="{Binding GlobalProgress}" ProgressColor="{StaticResource AccentBlue}" HeightRequest="8" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" Text="{Binding PercentageText}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="{StaticResource AccentBlue}" Margin="10,0,0,0"/>
                             </Grid>
-                            
-                            <Label Text="{Binding CurrentFileStatus}" FontSize="11" TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" LineBreakMode="TailTruncation" HorizontalOptions="Center"/>
-
+                            <Label Text="{Binding CurrentFileStatus}" FontSize="11" TextColor="{StaticResource SubtextLight}" LineBreakMode="TailTruncation" HorizontalOptions="Center"/>
                             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
                                 <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
-                                    <Label Text="SCAN" FontSize="8" TextColor="Gray" HorizontalTextAlignment="Center"/>
-                                    <Label Text="{Binding StatsScanned}" FontSize="14" HorizontalTextAlignment="Center" TextColor="#0078D4"/>
+                                    <Label Text="ESCANEADOS" FontSize="8" TextColor="{StaticResource SubtextLight}" HorizontalTextAlignment="Center"/>
+                                    <Label x:Name="StatScannedValue" Text="{Binding StatsScanned}" FontSize="14" HorizontalTextAlignment="Center" TextColor="{StaticResource AccentBlue}"/>
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
-                                    <Label Text="COPY" FontSize="8" TextColor="Gray" HorizontalTextAlignment="Center"/>
-                                    <Label Text="{Binding StatsCopied}" FontSize="14" HorizontalTextAlignment="Center" TextColor="#2DA44E"/>
+                                    <Label Text="COPIADOS" FontSize="8" TextColor="{StaticResource SubtextLight}" HorizontalTextAlignment="Center"/>
+                                    <Label x:Name="StatCopiedValue" Text="{Binding StatsCopied}" FontSize="14" HorizontalTextAlignment="Center" TextColor="{StaticResource SuccessGreen}"/>
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
-                                    <Label Text="SKIP" FontSize="8" TextColor="Gray" HorizontalTextAlignment="Center"/>
-                                    <Label Text="{Binding StatsFailed}" FontSize="14" HorizontalTextAlignment="Center" TextColor="#E81123"/>
+                                    <Label Text="FALLOS" FontSize="8" TextColor="{StaticResource SubtextLight}" HorizontalTextAlignment="Center"/>
+                                    <Label x:Name="StatFailedValue" Text="{Binding StatsFailed}" FontSize="14" HorizontalTextAlignment="Center" TextColor="{StaticResource ErrorRed}"/>
                                 </VerticalStackLayout>
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Consola de Actividad -->
-                    <Border x:Name="ConsoleCard" IsVisible="{Binding ShowActivityLog}" StrokeThickness="0" 
-                            BackgroundColor="{AppThemeBinding Light=#121212, Dark=#000000}" 
+                    <Border x:Name="ConsoleCard" IsVisible="{Binding ShowActivityLog}" StrokeThickness="0"
+                            BackgroundColor="{StaticResource ConsoleBgLight}"
                             Padding="15" HeightRequest="250">
                         <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
                         <VerticalStackLayout Spacing="5">
-                            <Label Text="LOG DE ACTIVIDAD" FontSize="10" FontAttributes="Bold" TextColor="#4DA6FF" Margin="0,0,0,5"/>
-                            <CollectionView ItemsSource="{Binding LogItems}" HeightRequest="200" AutomationProperties.Name="Registro de actividad" AutomationProperties.HelpText="Lista de mensajes de actividad del backup.">
+                            <Label Text="LOG DE ACTIVIDAD" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource ConsoleAccent}" Margin="0,0,0,5"/>
+                            <CollectionView ItemsSource="{Binding LogItems}" HeightRequest="206">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="vm:LogEntry">
                                         <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10" Padding="0,1">

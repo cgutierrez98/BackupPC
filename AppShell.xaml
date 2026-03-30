@@ -7,8 +7,20 @@
     Title="LocalBackupMaster">
 
     <ShellContent
-        Title="Home"
+        Title="Inicio"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
+
+    <ShellContent
+        Title="Historial"
+        ContentTemplate="{DataTemplate local:HistoryPage}"
+        Route="HistoryPage"
+        IsVisible="False" />
+
+    <ShellContent
+        Title="Restaurar"
+        ContentTemplate="{DataTemplate local:RestorePage}"
+        Route="RestorePage"
+        IsVisible="False" />
 
 </Shell>

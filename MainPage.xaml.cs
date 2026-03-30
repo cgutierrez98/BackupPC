@@ -1,6 +1,7 @@
 using LocalBackupMaster.ViewModels;
 using LocalBackupMaster.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 
 namespace LocalBackupMaster;
 
@@ -12,6 +13,23 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
+        AttachHoverScaleEffect(this);
+    }
+
+    // ─── Hover effect ────────────────────────────────────────────────────────
+
+    private static void AttachHoverScaleEffect(IVisualTreeElement element)
+    {
+        if (element is Button btn &&
+            !btn.GestureRecognizers.OfType<PointerGestureRecognizer>().Any())
+        {
+            var pgr = new PointerGestureRecognizer();
+            pgr.PointerEntered += (_, _) => btn.ScaleTo(1.04, 100, Easing.CubicOut).SafeFireAndForget();
+            pgr.PointerExited  += (_, _) => btn.ScaleTo(1.00, 100, Easing.CubicIn).SafeFireAndForget();
+            btn.GestureRecognizers.Add(pgr);
+        }
+        foreach (var child in element.GetVisualChildren())
+            AttachHoverScaleEffect(child);
     }
 
     // ─── Ciclo de vida ────────────────────────────────────────────────────────
@@ -19,48 +37,81 @@ public partial class MainPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"Error initializing: {ex.Message}"));
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        OnAppearingAsync().SafeFireAndForget(ex => Console.WriteLine($"OnAppearingAsync error: {ex}"));
     }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+    }
+
+    // ─── Reacciones reactivas ────────────────────────────────────────────────
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MainViewModel.IsBusy):
+                AnimateProgressCardAsync(_viewModel.IsBusy).SafeFireAndForget();
+                break;
+            case nameof(MainViewModel.StatsScanned):
+                PulseAsync(StatScannedValue).SafeFireAndForget();
+                break;
+            case nameof(MainViewModel.StatsCopied):
+                PulseAsync(StatCopiedValue).SafeFireAndForget();
+                break;
+            case nameof(MainViewModel.StatsFailed) when _viewModel.StatsFailed > 0:
+                PulseAsync(StatFailedValue).SafeFireAndForget();
+                break;
+        }
+    }
+
+    private async Task AnimateProgressCardAsync(bool show)
+    {
+        if (show)
+        {
+            ProgressCard.Opacity = 0;
+            ProgressCard.Scale   = 0.95;
+            ProgressCard.IsVisible = true;
+            _ = ProgressCard.FadeTo(1, 280, Easing.CubicOut);
+            await ProgressCard.ScaleTo(1, 280, Easing.CubicOut);
+        }
+        else
+        {
+            _ = ProgressCard.FadeTo(0, 200, Easing.CubicIn);
+            await ProgressCard.ScaleTo(0.97, 200, Easing.CubicIn);
+            ProgressCard.IsVisible = false;
+        }
+    }
+
+    private static async Task PulseAsync(View view)
+    {
+        await view.ScaleTo(1.20, 110, Easing.CubicOut);
+        await view.ScaleTo(1.00, 110, Easing.CubicIn);
+    }
+
+    // ─── Inicialización ──────────────────────────────────────────────────────
 
     private async Task OnAppearingAsync()
     {
-        try
-        {
-            await _viewModel.InitializeAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error initializing: {ex.Message}");
-        }
-
-        _ = HeaderTitle.FadeTo(1, 600);
-        _ = HeaderTitle.TranslateTo(0, 0, 600, Easing.CubicOut);
-        _ = SubHeaderLabel.FadeTo(1, 800);
-
-        await Task.Delay(120);
-        _ = SourcesCard.FadeTo(1, 500);
-        _ = SourcesCard.TranslateTo(0, 0, 500, Easing.CubicOut);
-
-        await Task.Delay(100);
-        _ = DestsCard.FadeTo(1, 500);
-        _ = DestsCard.TranslateTo(0, 0, 500, Easing.CubicOut);
-
-        await Task.Delay(100);
-        _ = ConfigCard.FadeTo(1, 500);
-        _ = ConfigCard.TranslateTo(0, 0, 500, Easing.CubicOut);
+        try { await _viewModel.InitializeAsync(); }
+        catch (Exception ex) { Console.WriteLine($"InitializeAsync error: {ex.Message}"); }
     }
 
-    // ─── Animations Helpers ──────────────────────────────────────────────────
+    // ─── Helpers de animación ────────────────────────────────────────────────
 
     private static async Task AnimateButtonClickAsync(View view)
     {
-        await view.ScaleTo(0.94, 90, Easing.CubicOut);
-        await view.ScaleTo(1.00, 90, Easing.CubicIn);
+        await view.ScaleTo(0.93, 80, Easing.CubicOut);
+        await view.ScaleTo(1.00, 80, Easing.CubicIn);
     }
 
-    // ─── Event Handlers (Solo para Animaciones o disparadores simples) ───────
+    // ─── Event Handlers ──────────────────────────────────────────────────────
 
-    private void OnSelectSourceClicked(object? sender, EventArgs e) => OnSelectSourceClickedAsync(sender, e).SafeFireAndForget();
+    private void OnSelectSourceClicked(object? sender, EventArgs e) =>
+        OnSelectSourceClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnSelectSourceClickedAsync(object? sender, EventArgs e)
     {
@@ -68,7 +119,8 @@ public partial class MainPage : ContentPage
         _viewModel.SelectSourceCommand.Execute(null);
     }
 
-    private void OnSelectDestinationClicked(object? sender, EventArgs e) => OnSelectDestinationClickedAsync(sender, e).SafeFireAndForget();
+    private void OnSelectDestinationClicked(object? sender, EventArgs e) =>
+        OnSelectDestinationClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnSelectDestinationClickedAsync(object? sender, EventArgs e)
     {
@@ -76,34 +128,22 @@ public partial class MainPage : ContentPage
         _viewModel.SelectDestinationCommand.Execute(null);
     }
 
-    private void OnCancelBackupClicked(object? sender, EventArgs e) => OnCancelBackupClickedAsync(sender, e).SafeFireAndForget();
+    private void OnCancelBackupClicked(object? sender, EventArgs e) =>
+        OnCancelBackupClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnCancelBackupClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
-        // Mostrar feedback de cancelación
-        var notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<LocalBackupMaster.Services.INotificationService>();
-        if (notificationService != null)
-        {
-            await notificationService.ShowNotificationAsync("Backup", "Operación cancelada.");
-        }
+        var ns = Application.Current?.Handler?.MauiContext?.Services
+                   .GetService<LocalBackupMaster.Services.INotificationService>();
+        if (ns != null) await ns.ShowNotificationAsync("Backup", "Operación cancelada.");
     }
 
-    private void OnStartBackupClicked(object? sender, EventArgs e) => OnStartBackupClickedAsync(sender, e).SafeFireAndForget();
+    private void OnStartBackupClicked(object? sender, EventArgs e) =>
+        OnStartBackupClickedAsync(sender, e).SafeFireAndForget();
 
     private async Task OnStartBackupClickedAsync(object? sender, EventArgs e)
     {
         if (sender is View btn) await AnimateButtonClickAsync(btn);
-
-        // Activamos la visibilidad de la card de progreso manualmente para la animación inicial
-        ProgressCard.IsVisible = true;
-        _ = ProgressCard.FadeTo(1, 400);
-        _ = ProgressCard.ScaleTo(1, 400, Easing.SpringOut);
-        // Mostrar feedback de inicio
-        var notificationService = Application.Current?.Handler?.MauiContext?.Services.GetService<LocalBackupMaster.Services.INotificationService>();
-        if (notificationService != null)
-        {
-            await notificationService.ShowSuccessAsync("Backup iniciado");
-        }
     }
 }

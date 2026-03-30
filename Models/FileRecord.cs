@@ -1,5 +1,3 @@
-using System;
-
 namespace LocalBackupMaster.Models;
 
 public class FileRecord
@@ -9,8 +7,12 @@ public class FileRecord
     public DateTime LastWriteTime { get; set; }
     public long FileSize { get; set; }
     public string? FileHash { get; set; }
-    
-    // Foreign key to BackupDestination to keep track of files per destination
     public int BackupDestinationId { get; set; }
     public BackupDestination? Destination { get; set; }
+
+    // ── B1: Cifrado ────────────────────────────────────────────────────────────────────
+    public bool IsEncrypted { get; set; }
+
+    // ── C2: Versionado ──────────────────────────────────────────────────────────────
+    public int VersionCount { get; set; }
 }

@@ -14,13 +14,14 @@ public class DeviceEventArgs : EventArgs
     public string? VolumeLabel { get; set; }
 }
 
-public class DeviceWatcherService
+public class DeviceWatcherService : IDisposable
 {
     public event EventHandler<DeviceEventArgs>? DeviceConnected;
     public event EventHandler<DeviceEventArgs>? DeviceDisconnected;
 
     private readonly TimeSpan _pollingInterval = TimeSpan.FromSeconds(3);
     private CancellationTokenSource? _cancellationTokenSource;
+    private readonly object _drivesLock = new();
     private HashSet<string> _knownDrives = new();
 
     public void StartWatching()
@@ -29,7 +30,10 @@ public class DeviceWatcherService
             return;
 
         _cancellationTokenSource = new CancellationTokenSource();
-        _knownDrives = GetReadyDrives().Select(d => d.Name).ToHashSet();
+        lock (_drivesLock)
+        {
+            _knownDrives = GetReadyDrives().Select(d => d.Name).ToHashSet();
+        }
 
         Task.Run(() => WatchLoop(_cancellationTokenSource.Token));
     }
@@ -41,6 +45,8 @@ public class DeviceWatcherService
         _cancellationTokenSource = null;
     }
 
+    public void Dispose() => StopWatching();
+
     private async Task WatchLoop(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -50,11 +56,24 @@ public class DeviceWatcherService
                 var currentDrives = GetReadyDrives();
                 var currentDriveNames = currentDrives.Select(d => d.Name).ToHashSet();
 
-                // Detección de nuevos discos
-                var newDrives = currentDrives.Where(d => !_knownDrives.Contains(d.Name)).ToList();
+                List<DriveInfo> newDrives;
+                List<string> removedDriveNames;
+
+                lock (_drivesLock)
+                {
+                    newDrives = currentDrives.Where(d => !_knownDrives.Contains(d.Name)).ToList();
+                    removedDriveNames = _knownDrives.Except(currentDriveNames).ToList();
+
+                    foreach (var drive in newDrives)
+                        _knownDrives.Add(drive.Name);
+
+                    foreach (var removedName in removedDriveNames)
+                        _knownDrives.Remove(removedName);
+                }
+
+                // Detección de nuevos discos (fuera del lock para evitar deadlock en handlers)
                 foreach (var drive in newDrives)
                 {
-                    _knownDrives.Add(drive.Name);
                     string label = string.Empty;
                     try { label = drive.VolumeLabel; } catch { }
 
@@ -67,10 +86,8 @@ public class DeviceWatcherService
                 }
 
                 // Detección de discos desconectados
-                var removedDriveNames = _knownDrives.Except(currentDriveNames).ToList();
                 foreach (var removedName in removedDriveNames)
                 {
-                    _knownDrives.Remove(removedName);
                     DeviceDisconnected?.Invoke(this, new DeviceEventArgs
                     {
                         DriveName = removedName,

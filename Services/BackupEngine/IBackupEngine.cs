@@ -7,11 +7,13 @@ namespace LocalBackupMaster.Services.BackupEngine;
 public interface IBackupEngine
 {
     Task<BackupReport> ExecuteAsync(
-        IEnumerable<BackupSource> sources,
-        BackupDestination destination,
-        IBackupStrategy strategy,
-        int parallelDegree,
-        IProgress<BackupProgressReport> progress,
-        CancellationToken token,
-        IEnumerable<string>? includeExtensions = null);
+        IEnumerable<BackupSource>          sources,
+        BackupDestination                  destination,
+        IBackupStrategy                    strategy,
+        int                                parallelDegree,
+        IProgress<BackupProgressReport>    progress,
+        CancellationToken                  token,
+        IEnumerable<string>?               includeExtensions = null,
+        bool                               dryRun            = false,
+        DateTimeOffset?                    sinceDate         = null);
 }

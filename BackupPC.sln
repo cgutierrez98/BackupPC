@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalBackupMaster", "LocalBackupMaster.csproj", "{0DDEC473-F658-D62D-5B0C-DCA4E8D40AA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalBackupMaster.Tests", "LocalBackupMaster.Tests\LocalBackupMaster.Tests.csproj", "{FE09FE32-28D6-16A6-F04D-4C773E1F12A7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0DDEC473-F658-D62D-5B0C-DCA4E8D40AA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DDEC473-F658-D62D-5B0C-DCA4E8D40AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DDEC473-F658-D62D-5B0C-DCA4E8D40AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DDEC473-F658-D62D-5B0C-DCA4E8D40AA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE09FE32-28D6-16A6-F04D-4C773E1F12A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE09FE32-28D6-16A6-F04D-4C773E1F12A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE09FE32-28D6-16A6-F04D-4C773E1F12A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE09FE32-28D6-16A6-F04D-4C773E1F12A7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E4F55E98-2EEE-4F14-9E5A-D0B6942C79E6}
+	EndGlobalSection
+EndGlobal

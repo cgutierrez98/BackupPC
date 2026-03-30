@@ -1,8 +1,5 @@
 namespace LocalBackupMaster.Models;
 
-/// <summary>
-/// Resultado completo de una operación de backup, pasado a la pantalla de reporte.
-/// </summary>
 public class BackupReport
 {
     public DateTime StartedAt    { get; init; } = DateTime.Now;
@@ -10,11 +7,14 @@ public class BackupReport
 
     public int  TotalScanned   { get; init; }
     public int  TotalCopied    { get; init; }
-    public int  TotalSkipped   { get; init; }   // sin cambios, no necesitaron copia
+    public int  TotalSkipped   { get; init; }
     public int  TotalFailed    { get; init; }
-    public long TotalBytesCopied { get; init; } // bytes efectivamente copiados
+    public long TotalBytesCopied { get; init; }
 
     public int  ParallelDegree { get; init; }
+
+    // ── A1: Dry-Run ─────────────────────────────────────────────────────────────────────
+    public bool WasDryRun { get; init; }
 
     public List<string> FailedFiles   { get; init; } = [];
     public List<string> CopiedFiles   { get; init; } = [];
@@ -33,6 +33,14 @@ public class BackupReport
         _                => $"{TotalBytesCopied} B"
     };
 
-    public string ResultEmoji => TotalFailed > 0 ? "⚠️" : "✅";
-    public string ResultText  => TotalFailed > 0 ? "Completado con advertencias" : "Completado exitosamente";
+    public string ResultEmoji => WasDryRun ? "🔍" : TotalFailed > 0 ? "⚠️" : "✅";
+    public string ResultText  => WasDryRun
+        ? "Simulacro completado"
+        : TotalFailed > 0 ? "Completado con advertencias" : "Completado exitosamente";
+
+    // Chip text helpers para ReportPage/ReportViewModel
+    public string ChipScanned => TotalScanned.ToString("N0");
+    public string ChipCopied  => TotalCopied.ToString("N0");
+    public string ChipFailed  => TotalFailed.ToString("N0");
+    public string DateText     => FinishedAt.ToString("dddd, d MMMM yyyy — HH:mm");
 }

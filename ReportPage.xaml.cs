@@ -34,6 +34,23 @@ public partial class ReportPage : ContentPage
                 _exportService = exportService;
                 _notificationService = notificationService;
             }
+        AttachHoverScaleEffect(this);
+    }
+
+    // ─── Hover effect: scale lift en todos los Button del árbol estático ─────
+
+    private static void AttachHoverScaleEffect(IVisualTreeElement element)
+    {
+        if (element is Button btn &&
+            !btn.GestureRecognizers.OfType<PointerGestureRecognizer>().Any())
+        {
+            var pgr = new PointerGestureRecognizer();
+            pgr.PointerEntered += (_, _) => btn.ScaleTo(1.04, 100, Easing.CubicOut).SafeFireAndForget();
+            pgr.PointerExited  += (_, _) => btn.ScaleTo(1.00, 100, Easing.CubicIn).SafeFireAndForget();
+            btn.GestureRecognizers.Add(pgr);
+        }
+        foreach (var child in element.GetVisualChildren())
+            AttachHoverScaleEffect(child);
     }
 
     protected override void OnAppearing()
@@ -53,9 +70,14 @@ public partial class ReportPage : ContentPage
     // ──────────────────────────────────────────────
     private void PopulateReport()
     {
-        // Si ya hay un ViewModel con las propiedades, no manipular la UI desde el code-behind
-        if (BindingContext is LocalBackupMaster.ViewModels.ReportViewModel)
+        // Si ya hay un ViewModel activo, los datos van por binding.
+        // Solo actualizamos la propiedad visual que no puede ir por binding (color del banner).
+        if (BindingContext is LocalBackupMaster.ViewModels.ReportViewModel vm)
+        {
+            if (HeroBanner != null)
+                HeroBanner.BackgroundColor = vm.Report.TotalFailed > 0 ? ColorWarning : ColorSuccess;
             return;
+        }
 
         try
         {
@@ -113,60 +135,91 @@ public partial class ReportPage : ContentPage
     {
         try
         {
-            // Banner hero
+            // ── 1. Banner hero: slide-up + fade + leve escala ────────────────
             if (HeroBanner != null)
             {
-                HeroBanner.TranslationY = 30;
+                HeroBanner.TranslationY = 28;
                 HeroBanner.Opacity      = 0;
-                _ = HeroBanner.FadeTo(1, 500);
-                await HeroBanner.TranslateTo(0, 0, 500, Easing.CubicOut);
+                HeroBanner.Scale        = 0.97;
+                _ = HeroBanner.FadeTo(1, 340, Easing.CubicOut);
+                _ = HeroBanner.TranslateTo(0, 0, 340, Easing.CubicOut);
+                await HeroBanner.ScaleTo(1, 340, Easing.CubicOut);
+
+                // Rebote del emoji después de que aparece el banner
+                if (ResultEmojiLabel != null)
+                    BounceEmojiAsync().SafeFireAndForget();
             }
 
-            await Task.Delay(100);
+            await Task.Delay(70);
 
-            // Chips
-            if (StatsGrid != null)
+            // ── 2. Chips: cada uno entra escalonado (55 ms entre sí) ─────────
+            var chips = new View?[] { ChipScannedBorder, ChipCopiedBorder, ChipSizeBorder, ChipFailedBorder };
+            foreach (var chip in chips)
             {
-                StatsGrid.Opacity      = 0;
-                StatsGrid.TranslationY = 20;
-                _ = StatsGrid.FadeTo(1, 400);
-                await StatsGrid.TranslateTo(0, 0, 400, Easing.CubicOut);
+                if (chip == null) continue;
+                chip.Opacity      = 0;
+                chip.TranslationY = 14;
+                chip.Scale        = 0.88;
+            }
+            // El contenedor ya visible (opacity=1), los hijos animamos individualmente
+            if (StatsGrid != null) { StatsGrid.Opacity = 1; StatsGrid.TranslationY = 0; }
+
+            foreach (var chip in chips)
+            {
+                if (chip == null) continue;
+                _ = chip.FadeTo(1, 270, Easing.CubicOut);
+                _ = chip.TranslateTo(0, 0, 270, Easing.CubicOut);
+                _ = chip.ScaleTo(1, 270, Easing.SpringOut);
+                await Task.Delay(55);
             }
 
-            await Task.Delay(80);
+            await Task.Delay(50);
 
+            // ── 3. Cards de archivos ──────────────────────────────────────────
             if (FailedCard != null && FailedCard.IsVisible)
             {
                 FailedCard.Opacity      = 0;
-                FailedCard.TranslationY = 20;
-                _ = FailedCard.FadeTo(1, 400);
-                await FailedCard.TranslateTo(0, 0, 400, Easing.CubicOut);
-                await Task.Delay(80);
+                FailedCard.TranslationY = 16;
+                _ = FailedCard.FadeTo(1, 300, Easing.CubicOut);
+                await FailedCard.TranslateTo(0, 0, 300, Easing.CubicOut);
+                await Task.Delay(55);
             }
 
             if (CopiedCard != null && CopiedCard.IsVisible)
             {
                 CopiedCard.Opacity      = 0;
-                CopiedCard.TranslationY = 20;
-                _ = CopiedCard.FadeTo(1, 400);
-                await CopiedCard.TranslateTo(0, 0, 400, Easing.CubicOut);
-                await Task.Delay(80);
+                CopiedCard.TranslationY = 16;
+                _ = CopiedCard.FadeTo(1, 300, Easing.CubicOut);
+                await CopiedCard.TranslateTo(0, 0, 300, Easing.CubicOut);
+                await Task.Delay(55);
             }
+
+            // ── 4. Botones: deslizan desde los lados en paralelo ─────────────
+            if (BackBtn != null)  { BackBtn.TranslationX  = -18; BackBtn.Opacity  = 0; }
+            if (ExportBtn != null) { ExportBtn.TranslationX = 18; ExportBtn.Opacity = 0; }
 
             if (BackBtn != null)
             {
-                _ = BackBtn.FadeTo(1, 350);
+                _ = BackBtn.FadeTo(1, 260, Easing.CubicOut);
+                _ = BackBtn.TranslateTo(0, 0, 260, Easing.CubicOut);
             }
-
             if (ExportBtn != null)
             {
-                await ExportBtn.FadeTo(1, 350);
+                _ = ExportBtn.FadeTo(1, 260, Easing.CubicOut);
+                _ = ExportBtn.TranslateTo(0, 0, 260, Easing.CubicOut);
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error in animations: {ex.Message}");
         }
+    }
+
+    private async Task BounceEmojiAsync()
+    {
+        await Task.Delay(260); // deja que el banner aterrice antes
+        await ResultEmojiLabel.ScaleTo(1.30, 160, Easing.SpringOut);
+        await ResultEmojiLabel.ScaleTo(1.00, 140, Easing.CubicIn);
     }
 
     // ──────────────────────────────────────────────

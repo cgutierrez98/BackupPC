@@ -22,19 +22,21 @@ public class IncrementalHashStrategy : IBackupStrategy
         // 1. Obtener registro del catálogo
         FileRecord? existing = await _databaseService.GetFileRecordAsync(dest.Id, relPath);
 
-        // 2. Lógica incremental básica (Metadatos)
-        bool needsCopy = existing is null 
-                      || !dstExists 
-                      || existing.FileSize != fi.Length 
-                      || existing.LastWriteTime < fi.LastWriteTimeUtc;
+        // 2. Sin registro previo o destino ausente → siempre copiar
+        if (existing is null || !dstExists)
+            return true;
 
-        // 3. Validación profunda (Hash) si hay dudas pero el archivo existe
-        if (needsCopy && existing is not null && dstExists)
+        // 3. Tamaño diferente → archivos claramente distintos, sin necesidad de hash
+        if (existing.FileSize != fi.Length)
+            return true;
+
+        // 4. Mismo tamaño pero mtime cambió → verificar con Hash para detectar modificaciones silenciosas
+        if (existing.LastWriteTime < fi.LastWriteTimeUtc)
         {
             string currentHash = await _scannerService.CalculateXXHash64Async(fi.FullName, token);
-            needsCopy = currentHash != existing.FileHash;
+            return currentHash != existing.FileHash;
         }
 
-        return needsCopy;
+        return false;
     }
 }

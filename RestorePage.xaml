@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="LocalBackupMaster.RestorePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:LocalBackupMaster.ViewModels"
+    xmlns:models="clr-namespace:LocalBackupMaster.Models"
+    Title="Restaurar Archivos"
+    BackgroundColor="{AppThemeBinding Light={StaticResource PageBgLight}, Dark={StaticResource PageBgDark}}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="24,20" RowSpacing="16">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+            <Label Text="Restaurar Archivos"
+                   FontSize="22" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"/>
+            <Label Text="Selecciona destino, elige archivos y elige dónde restaurar."
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"/>
+        </VerticalStackLayout>
+
+        <!-- Destination selector -->
+        <Border Grid.Row="1"
+                Padding="16,12"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardBgLight}, Dark={StaticResource CardBgDark}}"
+                StrokeShape="RoundRectangle 10">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Destino de backup" FontSize="13" FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"/>
+                <Picker ItemsSource="{Binding Destinations}"
+                        SelectedItem="{Binding SelectedDestination}"
+                        ItemDisplayBinding="{Binding BackupPath}"
+                        Title="Seleccionar destino…"
+                        TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"/>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- File tree -->
+        <Border Grid.Row="2"
+                Padding="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardBgLight}, Dark={StaticResource CardBgDark}}"
+                StrokeShape="RoundRectangle 10">
+            <Grid RowDefinitions="Auto,*">
+
+                <!-- Toolbar -->
+                <HorizontalStackLayout Grid.Row="0" Padding="12,8" Spacing="8">
+                    <Button Text="Todos"
+                            Command="{Binding SelectAllCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="10,4" FontSize="12"/>
+                    <Button Text="Ninguno"
+                            Command="{Binding ClearSelectionCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="10,4" FontSize="12"/>
+                    <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                       IsVisible="{Binding IsLoading}"
+                                       Color="{AppThemeBinding Light={StaticResource AccentLight}, Dark={StaticResource AccentDark}}"
+                                       WidthRequest="20" HeightRequest="20"/>
+                </HorizontalStackLayout>
+
+                <!-- Items -->
+                <CollectionView Grid.Row="1"
+                                ItemsSource="{Binding FileTree}"
+                                SelectionMode="None">
+
+                    <CollectionView.EmptyView>
+                        <Label Text="{Binding EmptyMessage}"
+                               HorizontalOptions="Center" VerticalOptions="Center"
+                               FontSize="13" Opacity="0.5" Margin="0,24"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"/>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:FileRecord">
+                            <Grid ColumnDefinitions="36,*,Auto" Padding="12,8" ColumnSpacing="8">
+                                <CheckBox Grid.Column="0"
+                                          Color="{AppThemeBinding Light={StaticResource AccentLight}, Dark={StaticResource AccentDark}}"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding RelativePath}"
+                                       FontSize="13" LineBreakMode="TailTruncation"
+                                       VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"/>
+                                <Label Grid.Column="2"
+                                       FontSize="11" Opacity="0.6" VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}">
+                                    <Label.Text>
+                                        <MultiBinding StringFormat="{}{0}  🔒{1}">
+                                            <Binding Path="FileSize" StringFormat="{}{0:N0} B"/>
+                                            <Binding Path="IsEncrypted"/>
+                                        </MultiBinding>
+                                    </Label.Text>
+                                </Label>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+
+                </CollectionView>
+
+            </Grid>
+        </Border>
+
+        <!-- Footer: status + restore button -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <Label Grid.Column="0"
+                   Text="{Binding StatusMessage}"
+                   FontSize="13" VerticalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"/>
+            <Button Grid.Column="1"
+                    Text="Restaurar archivos seleccionados"
+                    Command="{Binding RestoreCommand}"
+                    IsEnabled="{Binding CanRestore}"
+                    Style="{StaticResource PrimaryButtonStyle}"/>
+        </Grid>
+
+    </Grid>
+</ContentPage>

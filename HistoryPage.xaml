@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="LocalBackupMaster.HistoryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:LocalBackupMaster.ViewModels"
+    xmlns:models="clr-namespace:LocalBackupMaster.Models"
+    Title="Historial de Backups"
+    BackgroundColor="{AppThemeBinding Light={StaticResource PageBgLight}, Dark={StaticResource PageBgDark}}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="24,20">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <Label Text="Historial de Backups"
+                   FontSize="22" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"/>
+            <Label Text="Últimas 100 ejecuciones registradas"
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"/>
+        </VerticalStackLayout>
+
+        <!-- List -->
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsLoading}"
+                     Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding HistoryItems}"
+                            SelectionMode="None">
+
+                <CollectionView.EmptyView>
+                    <Label Text="{Binding EmptyMessage}"
+                           HorizontalOptions="Center" VerticalOptions="Center"
+                           FontSize="14" Opacity="0.5"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"/>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:BackupReportSummary">
+                        <Border Margin="0,0,0,10"
+                                Padding="16,12"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource CardBgLight}, Dark={StaticResource CardBgDark}}"
+                                StrokeShape="RoundRectangle 10">
+                            <Grid ColumnDefinitions="36,*,Auto" ColumnSpacing="12">
+
+                                <!-- Emoji badge -->
+                                <Label Grid.Column="0"
+                                       Text="{Binding StatusEmoji}"
+                                       FontSize="22"
+                                       VerticalOptions="Center"/>
+
+                                <!-- Info -->
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding DateText}"
+                                           FontSize="14" FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"/>
+                                    <Label FontSize="12"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="Copiados: {0}  ·  Fallidos: {1}  ·  {2}">
+                                                <Binding Path="TotalCopied"/>
+                                                <Binding Path="TotalFailed"/>
+                                                <Binding Path="SizeText"/>
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+                                    <Label Text="{Binding DestinationPath}"
+                                           FontSize="11" Opacity="0.6"
+                                           LineBreakMode="TailTruncation"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"/>
+                                </VerticalStackLayout>
+
+                                <!-- Duration + dry-run chip -->
+                                <VerticalStackLayout Grid.Column="2" Spacing="4" VerticalOptions="Center" HorizontalOptions="End">
+                                    <Label Text="{Binding DurationText}"
+                                           FontSize="13"
+                                           TextColor="{AppThemeBinding Light={StaticResource AccentLight}, Dark={StaticResource AccentDark}}"/>
+                                    <Border IsVisible="{Binding WasDryRun}"
+                                            Padding="6,2"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource AccentLight}, Dark={StaticResource AccentDark}}"
+                                            StrokeShape="RoundRectangle 8">
+                                        <Label Text="SIMULACRO" FontSize="9" FontAttributes="Bold" TextColor="White"/>
+                                    </Border>
+                                </VerticalStackLayout>
+
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+    </Grid>
+</ContentPage>

@@ -10,12 +10,6 @@ namespace LocalBackupMaster.ViewModels;
 
 public partial class ReportViewModel : ObservableObject
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private readonly IReportExportService _exportService;
     private readonly INotificationService _notificationService;
 
@@ -107,7 +101,7 @@ public partial class ReportViewModel : ObservableObject
 
     public Task<string> GetJsonAsync()
     {
-        var json = JsonSerializer.Serialize(Report, Options);
+        var json = JsonSerializer.Serialize(Report, JsonDefaults.Options);
         return Task.FromResult(json);
     }
 

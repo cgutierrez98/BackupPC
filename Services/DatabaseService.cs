@@ -80,6 +80,13 @@ public class DatabaseService : IDatabaseService
         return await ctx.Destinations.ToListAsync();
     }
 
+    public async Task UpdateDestinationAsync(BackupDestination destination)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        ctx.Destinations.Update(destination);
+        await ctx.SaveChangesAsync();
+    }
+
     // ── File Catalog ─────────────────────────────────────────────────────────
 
     public async Task<FileRecord?> GetFileRecordAsync(int destinationId, string relativePath)
@@ -95,7 +102,7 @@ public class DatabaseService : IDatabaseService
         await using var ctx = await _factory.CreateDbContextAsync();
         var existing = await ctx.FileCatalog
             .FirstOrDefaultAsync(f => f.BackupDestinationId == record.BackupDestinationId
-                                    && f.RelativePath == record.RelativePath);
+                                   && f.RelativePath        == record.RelativePath);
 
         if (existing == null)
         {
@@ -103,11 +110,84 @@ public class DatabaseService : IDatabaseService
         }
         else
         {
-            existing.LastWriteTime = record.LastWriteTime;
-            existing.FileSize = record.FileSize;
-            existing.FileHash = record.FileHash;
+            existing.LastWriteTime  = record.LastWriteTime;
+            existing.FileSize       = record.FileSize;
+            existing.FileHash       = record.FileHash;
+            existing.IsEncrypted    = record.IsEncrypted;
+            existing.VersionCount   = record.VersionCount;
             ctx.FileCatalog.Update(existing);
         }
         await ctx.SaveChangesAsync();
+    }
+
+    public async Task<List<FileRecord>> GetFileRecordsByDestinationAsync(int destinationId)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        return await ctx.FileCatalog
+            .Where(f => f.BackupDestinationId == destinationId)
+            .ToListAsync();
+    }
+
+    public async Task<FileRecord?> GetFileRecordByHashAsync(int destinationId, string hash)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        return await ctx.FileCatalog
+            .FirstOrDefaultAsync(f => f.BackupDestinationId == destinationId
+                                   && f.FileHash            == hash);
+    }
+
+    // ── Profiles (C1) ────────────────────────────────────────────────────────
+
+    public async Task<List<BackupProfile>> GetProfilesAsync()
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        return await ctx.Profiles.OrderBy(p => p.Name).ToListAsync();
+    }
+
+    public async Task<BackupProfile> SaveProfileAsync(BackupProfile profile)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        if (profile.Id == 0)
+        {
+            profile.CreatedAt = DateTime.UtcNow;
+            profile.UpdatedAt = DateTime.UtcNow;
+            ctx.Profiles.Add(profile);
+        }
+        else
+        {
+            profile.UpdatedAt = DateTime.UtcNow;
+            ctx.Profiles.Update(profile);
+        }
+        await ctx.SaveChangesAsync();
+        return profile;
+    }
+
+    public async Task DeleteProfileAsync(int id)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        var p = await ctx.Profiles.FindAsync(id);
+        if (p != null)
+        {
+            ctx.Profiles.Remove(p);
+            await ctx.SaveChangesAsync();
+        }
+    }
+
+    // ── Report History (D2) ──────────────────────────────────────────────────
+
+    public async Task SaveReportSummaryAsync(BackupReportSummary summary)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        ctx.ReportHistory.Add(summary);
+        await ctx.SaveChangesAsync();
+    }
+
+    public async Task<List<BackupReportSummary>> GetReportHistoryAsync(int limit = 50)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync();
+        return await ctx.ReportHistory
+            .OrderByDescending(r => r.Date)
+            .Take(limit)
+            .ToListAsync();
     }
 }

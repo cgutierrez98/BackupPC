@@ -24,32 +24,49 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Register Database and Services
-        // IDbContextFactory crea un DbContext independiente por operación → thread-safe con hilos paralelos
+        // ── Database ────────────────────────────────────────────────────────
         string dbPath = Path.Combine(FileSystem.AppDataDirectory, "backupmaster.db");
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
             options.UseSqlite($"Filename={dbPath}"));
 
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+
+        // ── Core services ───────────────────────────────────────────────────
         builder.Services.AddSingleton<DeviceWatcherService>();
         builder.Services.AddTransient<IBackupScannerService, BackupScannerService>();
 
-        // Register Backup Engine and Strategy
+        // ── B1: Encryption ──────────────────────────────────────────────────
+        builder.Services.AddSingleton<IEncryptionService, AesEncryptionService>();
+
+        // ── B2: Integrity check ──────────────────────────────────────────────
+        builder.Services.AddTransient<IIntegrityCheckService, IntegrityCheckService>();
+
+        // ── C2: Version cleanup ──────────────────────────────────────────────
+        builder.Services.AddTransient<IVersionCleanupService, VersionCleanupService>();
+
+        // ── D3: Restore ─────────────────────────────────────────────────────
+        builder.Services.AddTransient<IRestoreService, RestoreService>();
+
+        // ── Backup engine + strategy ─────────────────────────────────────────
         builder.Services.AddTransient<IBackupStrategy, IncrementalHashStrategy>();
         builder.Services.AddTransient<IBackupEngine, ParallelBackupEngine>();
 
-        // Phase 3 Support Services
+        // ── Phase 3 support services ─────────────────────────────────────────
         builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
         builder.Services.AddSingleton<INotificationService, MauiNotificationService>();
         builder.Services.AddSingleton<IBackupValidator, BackupValidator>();
         builder.Services.AddSingleton<IReportExportService, JsonReportExportService>();
 
-        // Register ViewModels
+        // ── ViewModels ───────────────────────────────────────────────────────
         builder.Services.AddSingleton<MainViewModel>();
+        builder.Services.AddTransient<HistoryViewModel>();
+        builder.Services.AddTransient<RestoreViewModel>();
 
-        // Register Pages
+        // ── Pages ────────────────────────────────────────────────────────────
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<ReportPage>();
+        builder.Services.AddTransient<HistoryPage>();
+        builder.Services.AddTransient<RestorePage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

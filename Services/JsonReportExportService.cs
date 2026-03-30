@@ -7,15 +7,9 @@ namespace LocalBackupMaster.Services;
 
 public class JsonReportExportService : IReportExportService
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     public async Task<string> ExportToJsonAsync(BackupReport report, string filePath)
     {
-        var json = JsonSerializer.Serialize(report, Options);
+        var json = JsonSerializer.Serialize(report, JsonDefaults.Options);
         await File.WriteAllTextAsync(filePath, json);
         return filePath;
     }
