@@ -40,6 +40,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<LogEntry>          LogItems         { get; } = [];
     public ObservableCollection<BackupProfile>     Profiles         { get; } = [];
 
+    // ── Throttle (A2): safe accessor for the first destination ─────────────
+    public int ThrottleKBps => DestinationItems.Count > 0 ? DestinationItems[0].ThrottleKBps : 0;
+
     // ── Opciones de ejecución ──────────────────────────────────────────────
     [ObservableProperty] private int  _parallelDegree   = 4;
     [ObservableProperty] private string _includeExtensions = "";
@@ -106,6 +109,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _deviceWatcherService.DeviceConnected    += OnDeviceConnected;
         _deviceWatcherService.DeviceDisconnected += OnDeviceDisconnected;
         _deviceWatcherService.StartWatching();
+
+        DestinationItems.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ThrottleKBps));
     }
 
     public void Dispose()

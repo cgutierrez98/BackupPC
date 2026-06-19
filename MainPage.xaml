@@ -272,11 +272,8 @@
                             <VerticalStackLayout Spacing="4">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <Label Text="Throttle (KB/s)" FontSize="13" TextColor="{StaticResource SubtextLight}" VerticalOptions="Center"/>
-                                    <Label Grid.Column="1" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource AccentBlue}">
-                                        <Label.Text>
-                                            <Binding Path="DestinationItems[0].ThrottleKBps" FallbackValue="0" StringFormat="{}{0} KB/s"/>
-                                        </Label.Text>
-                                    </Label>
+                                    <Label Grid.Column="1" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource AccentBlue}"
+                                           Text="{Binding ThrottleKBps, StringFormat='{}{0} KB/s'}"/>
                                 </Grid>
                                 <Label Text="0 = sin límite" FontSize="10" Opacity="0.5" TextColor="{StaticResource SubtextLight}"/>
                             </VerticalStackLayout>
