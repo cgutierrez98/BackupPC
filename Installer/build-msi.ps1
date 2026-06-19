@@ -127,7 +127,7 @@ foreach ($f in $files) {
   if (-not $dirContent.ContainsKey($targetDirId)) { $dirContent[$targetDirId] = @() }
   $dirContent[$targetDirId] += $compDef
   $compRefs += '      <ComponentRef Id="' + $compId + '" />'
-  if (-not $mainExe -and $f.Extension -eq '.exe') { $mainExe = @{ Rel=$rel; FileId=$fileId } }
+  if ($f.Extension -eq '.exe' -and $f.BaseName -eq $productName) { $mainExe = @{ Rel=$rel; FileId=$fileId } }
 }
 
 if ($mainExe) {
